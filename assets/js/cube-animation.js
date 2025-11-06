@@ -21,7 +21,7 @@ class FourierImageAnimation {
         this.centerX = this.width / 2;
         this.centerY = this.height / 2;
         this.time = 0;
-        this.speed = 2 * Math.PI / samplePoints; // 1 full loop per ~samplePoints frames
+        this.speed = 1.5 * Math.PI / samplePoints; // 1 full loop per ~samplePoints frames
         
         this.terms = terms;
         this.samplePoints = samplePoints;
@@ -43,7 +43,7 @@ class FourierImageAnimation {
         this.prevCoeffs = null;
         this.prevPath = null;
         this.transitionProgress = 1.0; // 0 = showing old, 1 = showing new
-        this.transitionSpeed = 0.003; // How fast to transition (much slower)
+        this.transitionSpeed = 0.0001; // How fast to transition (much slower)
         this.curveChangeInterval = 12000; // Change curve every 12 seconds
         this.lastCurveChange = Date.now();
         this.transitionDuration = 3000; // 3 seconds for full transition (in ms)
@@ -59,9 +59,11 @@ class FourierImageAnimation {
         this.targetY = this.centerY;
         this.isFollowingCursor = false;
         this.cursorSmoothing = 0.15; // How fast to follow cursor (0-1, higher = faster)
-        this.returnToCenterSpeed = 0.08; // Slower speed for returning to center
+        this.returnToCenterSpeed = 0.10; // Slower speed for returning to center
         this.lastMouseMove = Date.now();
         this.cursorTimeout = 5000; // 5 seconds of inactivity before returning to center
+        this.cursorModeProgress = 0.0; // 0 = parametric, 1 = cursor (for smooth transition)
+        this.cursorModeTransitionSpeed = 0.02; // How fast to transition between modes
         
         // Generate simple Fourier pattern for cursor following (circle-like)
         this.cursorCoeffs = this.generateSimpleFourierPattern();
@@ -1124,7 +1126,78 @@ class FourierImageAnimation {
         return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     }
     
-    // Get interpolated coefficients for smooth transition
+    // Get interpolated coefficients between cursor and parametric modes
+    getInterpolatedCursorCoeffs(t, parametricCoeffs) {
+        // t: 0 = parametric, 1 = cursor
+        if (t <= 0) return parametricCoeffs;
+        if (t >= 1) return this.cursorCoeffs;
+        
+        const interpolated = [];
+        const cursorMap = new Map();
+        this.cursorCoeffs.forEach(c => {
+            cursorMap.set(c.freq, c);
+        });
+        
+        const parametricMap = new Map();
+        parametricCoeffs.forEach(c => {
+            parametricMap.set(c.freq, c);
+        });
+        
+        // Get all unique frequencies
+        const allFreqs = new Set();
+        this.cursorCoeffs.forEach(c => allFreqs.add(c.freq));
+        parametricCoeffs.forEach(c => allFreqs.add(c.freq));
+        
+        // Interpolate all frequencies
+        allFreqs.forEach(freq => {
+            const cursor = cursorMap.get(freq);
+            const parametric = parametricMap.get(freq);
+            
+            if (cursor && parametric) {
+                // Both exist: interpolate smoothly
+                const amp = (1 - t) * parametric.amp + t * cursor.amp;
+                
+                // Interpolate phase taking shortest path around circle
+                let phaseDiff = cursor.phase - parametric.phase;
+                while (phaseDiff > Math.PI) phaseDiff -= 2 * Math.PI;
+                while (phaseDiff < -Math.PI) phaseDiff += 2 * Math.PI;
+                const phase = parametric.phase + t * phaseDiff;
+                
+                interpolated.push({
+                    freq: freq,
+                    re: amp * Math.cos(phase),
+                    im: amp * Math.sin(phase),
+                    amp: amp,
+                    phase: phase
+                });
+            } else if (cursor) {
+                // Only in cursor: fade in
+                interpolated.push({
+                    freq: freq,
+                    re: cursor.re * t,
+                    im: cursor.im * t,
+                    amp: cursor.amp * t,
+                    phase: cursor.phase
+                });
+            } else if (parametric) {
+                // Only in parametric: fade out
+                interpolated.push({
+                    freq: freq,
+                    re: parametric.re * (1 - t),
+                    im: parametric.im * (1 - t),
+                    amp: parametric.amp * (1 - t),
+                    phase: parametric.phase
+                });
+            }
+        });
+        
+        // Sort by amplitude
+        interpolated.sort((a, b) => b.amp - a.amp);
+        
+        return interpolated;
+    }
+    
+    // Get interpolated coefficients for smooth transition (between parametric curves)
     getInterpolatedCoeffs() {
         if (!this.prevCoeffs || this.transitionProgress >= 1.0) {
             return this.baseCoeffs;
@@ -1393,6 +1466,10 @@ class FourierImageAnimation {
                 this.targetY += (this.centerY - this.targetY) * this.returnToCenterSpeed;
             }
             
+            // Smoothly transition cursor mode progress (0 = parametric, 1 = cursor)
+            const targetModeProgress = this.isFollowingCursor ? 1.0 : 0.0;
+            this.cursorModeProgress += (targetModeProgress - this.cursorModeProgress) * this.cursorModeTransitionSpeed;
+            
             // Smoothly update epicycle center position (follow cursor or return to center)
             // Use slower smoothing for returning to center
             const smoothing = this.isFollowingCursor ? this.cursorSmoothing : this.returnToCenterSpeed;
@@ -1403,19 +1480,24 @@ class FourierImageAnimation {
             const epicycleCenterX = this.mouseX;
             const epicycleCenterY = this.mouseY;
             
-            // Choose which coefficients to use based on cursor following state
-            const useCoeffs = this.isFollowingCursor ? this.cursorCoeffs : this.baseCoeffs;
+            // Get current parametric coefficients (may be interpolated if transitioning between curves)
+            const currentParametricCoeffs = this.getInterpolatedCoeffs();
+            
+            // Smoothly interpolate between cursor and parametric coefficients
+            const interpolatedCoeffs = this.getInterpolatedCursorCoeffs(this.cursorModeProgress, currentParametricCoeffs);
             const originalCoeffs = this.baseCoeffs;
             const originalMaxAmp = this.maxAmplitude;
             
             // Temporarily swap coefficients for drawing
-            this.baseCoeffs = useCoeffs;
+            this.baseCoeffs = interpolatedCoeffs;
             
-            // Update max amplitude for cursor coefficients if needed
-            if (this.isFollowingCursor) {
-                this.maxAmplitude = this.cursorCoeffs.length > 0 ? 
-                    Math.max(...this.cursorCoeffs.map(c => c.amp)) : 1;
-            }
+            // Interpolate max amplitude
+            const cursorMaxAmp = this.cursorCoeffs.length > 0 ? 
+                Math.max(...this.cursorCoeffs.map(c => c.amp)) : 1;
+            const parametricMaxAmp = currentParametricCoeffs.length > 0 ? 
+                Math.max(...currentParametricCoeffs.map(c => c.amp)) : 1;
+            this.maxAmplitude = (1 - this.cursorModeProgress) * parametricMaxAmp + 
+                               this.cursorModeProgress * cursorMaxAmp;
             
             // Draw 4 epicycles (1 main + 3 smaller ones) with different phase offsets
             const points = [];
@@ -1428,7 +1510,7 @@ class FourierImageAnimation {
                 
                 // Only show circles for the main one (first)
                 const showCircles = (e === 0);
-                const opacity = e === 0 ? 0.35 : 0.2;
+                const opacity = e === 0 ? 0.40 : 0.2;
                 
                 const p = this.drawEpicyclesCentered(tOffset, epicycleCenterX, epicycleCenterY, scale, showCircles, opacity);
                 
