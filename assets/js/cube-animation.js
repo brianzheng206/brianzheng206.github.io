@@ -5,7 +5,7 @@
  */
 
 class FourierImageAnimation {
-    constructor(canvasId, { imageSrc = null, svgPath = null, terms = 80, samplePoints = 600, sizeScale = 0.5 } = {}) {
+    constructor(canvasId, { imageSrc = null, svgPath = null, terms = 80, samplePoints = 600, sizeScale = 1.5 } = {}) {
         this.canvas = document.getElementById(canvasId);
         if (!this.canvas) return;
         
@@ -21,7 +21,7 @@ class FourierImageAnimation {
         this.centerX = this.width / 2;
         this.centerY = this.height / 2;
         this.time = 0;
-        this.speed = 1.5 * Math.PI / samplePoints; // 1 full loop per ~samplePoints frames
+        this.speed = 0.85 * Math.PI / samplePoints; // 1 full loop per ~samplePoints frames
         
         this.terms = terms;
         this.samplePoints = samplePoints;
@@ -31,12 +31,12 @@ class FourierImageAnimation {
         this.trail = [];
         this.trails = [[], [], [], []]; // Multiple trails for multiple epicycles
         this.maxTrail = Math.floor(samplePoints * 0.4); // Shorter trails (40% of original)
-        this.circleScale = 2.0; // Base visual multiplier for circle sizes (for display only)
+        this.circleScale = 1.5; // Base visual multiplier for circle sizes (for display only)
         this.maxAmplitude = 1; // Will be updated when DFT is calculated
         
         // Cube rotation parameters
         this.cubeRotation = { A: 0, B: 0, C: 0 };
-        this.cubeSize = 120; // Bigger cube
+        this.cubeSize = 10; // Bigger cube
         this.baseRotation = { A: 0, B: 0, C: 0 }; // Canonical rotation
         
         // Curve transition parameters
@@ -50,7 +50,7 @@ class FourierImageAnimation {
         
         // Phase offsets for multiple epicycles (in radians, relative to full cycle)
         this.epicycleOffsets = [0, Math.PI * 0.25, Math.PI * 0.5, Math.PI * 0.75];
-        this.epicycleScales = [1.0, 0.6, 0.5, 0.4]; // Size multipliers for smaller epicycles
+        this.epicycleScales = [1.0, 0.6, 0.7, 0.5]; // Size multipliers for smaller epicycles
         
         // Cursor tracking for interactive epicycle center
         this.mouseX = this.centerX;
@@ -58,12 +58,12 @@ class FourierImageAnimation {
         this.targetX = this.centerX;
         this.targetY = this.centerY;
         this.isFollowingCursor = false;
-        this.cursorSmoothing = 0.15; // How fast to follow cursor (0-1, higher = faster)
+        this.cursorSmoothing = 0.30; // How fast to follow cursor (0-1, higher = faster)
         this.returnToCenterSpeed = 0.10; // Slower speed for returning to center
         this.lastMouseMove = Date.now();
         this.cursorTimeout = 7000; // 7 seconds of inactivity before starting fade
         this.cursorModeProgress = 0.0; // 0 = parametric, 1 = cursor (for smooth transition)
-        this.cursorModeTransitionSpeed = 0.01; // Slower blend for smoother transitions
+        this.cursorModeTransitionSpeed = 0.005; // Slower blend for smoother transitions
         
         // Soft cursor engagement/decay (no hard boolean flips)
         this.cursorModeTarget = false; // Target state (smoothly transitions)
@@ -1660,7 +1660,7 @@ class FourierImageAnimation {
             
             // Draw 4 epicycles (1 main + 3 smaller ones) with different phase offsets
             const points = [];
-            for (let e = 0; e < 4; e++) {
+            for (let e = 0; e < 3; e++) {
                 const offset = this.epicycleOffsets[e];
                 const scale = this.epicycleScales[e];
                 // Offset is in radians - add directly to time (time is already in parameter space)
