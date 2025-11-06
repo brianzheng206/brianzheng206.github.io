@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourier Series Visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #372c29;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        #visualizationCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            cursor: crosshair;
+        }
+
+        .info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #6e5c54;
+            background-color: rgba(55, 44, 41, 0.8);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(110, 92, 84, 0.3);
+            font-size: 14px;
+            line-height: 1.6;
+            z-index: 1000;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+        }
+
+        .info h1 {
+            color: #6e5c54;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .info p {
+            color: #8a7a72;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .info .click-hint {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(110, 92, 84, 0.2);
+            font-style: italic;
+            color: #6e5c54;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="visualizationCanvas"></canvas>
+    
+    <div class="info">
+        <h1>Fourier Series Visualization</h1>
+        <p>Lissajous curves traced by rotating epicycles</p>
+        <p>Curves transition every 5 seconds</p>
+        <p class="click-hint">Click anywhere to create ripples</p>
+    </div>
+
+    <script src="assets/js/cube-animation.js"></script>
+    <script>
+        // Initialize the visualization
+        document.addEventListener('DOMContentLoaded', function() {
+            new FourierImageAnimation('visualizationCanvas', {
+                terms: 80,
+                samplePoints: 600,
+                sizeScale: 0.8
+            });
+        });
+    </script>
+</body>
+</html>
+

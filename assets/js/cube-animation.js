@@ -47,9 +47,11 @@ class FourierImageAnimation {
         this.prevPath = null;
         this.transitionProgress = 1.0; // 0 = showing old, 1 = showing new
         this.transitionSpeed = 0.0001; // How fast to transition (much slower)
-        this.curveChangeInterval = 12000; // Change curve every 12 seconds
-        this.lastCurveChange = Date.now();
+        this.curveChangeInterval = 5000; // Change curve every 5 seconds
+        this.lastCurveChange = Date.now(); // When last transition completed (or animation started)
         this.transitionDuration = 3000; // 3 seconds for full transition (in ms)
+        this.transitionStartTime = null; // Track when current transition started (null if no transition active)
+        this.lastPathType = undefined; // Track last path type to ensure variety
         
         // Phase offsets for multiple epicycles (in radians, relative to full cycle)
         this.epicycleOffsets = [0, Math.PI * 0.25, Math.PI * 0.5, Math.PI * 0.75];
@@ -420,78 +422,27 @@ class FourierImageAnimation {
         return arr.slice(k).concat(arr.slice(0, k));
     }
     
-    // Generate a random parametric path (spirograph-like or harmonic curve)
+    // Generate a random Lissajous curve
     generateRandomParametricPath() {
         const numPoints = this.samplePoints;
         const points = [];
         
-        // Choose a random parametric function type
-        const type = Math.floor(Math.random() * 4);
-        
         // Base size for the path
         const baseSize = Math.min(this.width, this.height) * 0.25;
         
-        if (type === 0) {
-            // Spirograph-like curve (hypotrochoid/epitrochoid)
-            const R = baseSize * (0.5 + Math.random() * 0.5);
-            const r = baseSize * (0.2 + Math.random() * 0.3);
-            const d = baseSize * (0.1 + Math.random() * 0.4);
-            const ratio = (2 + Math.random() * 5) / (3 + Math.random() * 4);
-            
-            for (let i = 0; i < numPoints; i++) {
-                const t = (i / numPoints) * Math.PI * 2 * ratio;
-                const x = (R - r) * Math.cos(t) + d * Math.cos((R - r) / r * t);
-                const y = (R - r) * Math.sin(t) - d * Math.sin((R - r) / r * t);
-                points.push({ x: x + this.centerX, y: y + this.centerY });
-            }
-        } else if (type === 1) {
-            // Lissajous curve with harmonics
-            const a = 2 + Math.floor(Math.random() * 4);
-            const b = 2 + Math.floor(Math.random() * 4);
-            const phase = Math.random() * Math.PI * 2;
-            const amplitude = baseSize * (0.6 + Math.random() * 0.4);
-            
-            for (let i = 0; i < numPoints; i++) {
-                const t = (i / numPoints) * Math.PI * 2;
-                const x = amplitude * Math.cos(a * t + phase);
-                const y = amplitude * Math.sin(b * t);
-                points.push({ x: x + this.centerX, y: y + this.centerY });
-            }
-        } else if (type === 2) {
-            // Multi-harmonic curve (Fourier series in disguise)
-            const harmonics = [];
-            for (let h = 0; h < 3 + Math.floor(Math.random() * 4); h++) {
-                harmonics.push({
-                    freq: h + 1,
-                    ampX: baseSize * (0.3 + Math.random() * 0.4) / (h + 1),
-                    ampY: baseSize * (0.3 + Math.random() * 0.4) / (h + 1),
-                    phaseX: Math.random() * Math.PI * 2,
-                    phaseY: Math.random() * Math.PI * 2
-                });
-            }
-            
-            for (let i = 0; i < numPoints; i++) {
-                const t = (i / numPoints) * Math.PI * 2;
-                let x = 0, y = 0;
-                harmonics.forEach(h => {
-                    x += h.ampX * Math.cos(h.freq * t + h.phaseX);
-                    y += h.ampY * Math.sin(h.freq * t + h.phaseY);
-                });
-                points.push({ x: x + this.centerX, y: y + this.centerY });
-            }
-        } else {
-            // Rose curve (rhodonea)
-            const n = 2 + Math.floor(Math.random() * 6);
-            const k = (2 + Math.random() * 3) / (2 + Math.random() * 3);
-            const amplitude = baseSize * (0.6 + Math.random() * 0.4);
-            
-            for (let i = 0; i < numPoints; i++) {
-                const t = (i / numPoints) * Math.PI * 2 * n;
-                const r = amplitude * Math.cos(k * t);
-                const x = r * Math.cos(t);
-                const y = r * Math.sin(t);
-                points.push({ x: x + this.centerX, y: y + this.centerY });
-            }
+        // Generate Lissajous curve with random parameters
+        // Lissajous curves: x = A * cos(a*t + phase), y = B * sin(b*t)
+        const a = 2 + Math.floor(Math.random() * 5); // Frequency ratio numerator (2-6)
+        const b = 2 + Math.floor(Math.random() * 5); // Frequency ratio denominator (2-6)
+        const phase = Math.random() * Math.PI * 2; // Phase offset
+        const amplitudeX = baseSize * (0.6 + Math.random() * 0.4); // X amplitude
+        const amplitudeY = baseSize * (0.6 + Math.random() * 0.4); // Y amplitude
+        
+        for (let i = 0; i < numPoints; i++) {
+            const t = (i / numPoints) * Math.PI * 2;
+            const x = amplitudeX * Math.cos(a * t + phase);
+            const y = amplitudeY * Math.sin(b * t);
+            points.push({ x: x + this.centerX, y: y + this.centerY });
         }
         
         return points;
@@ -1357,6 +1308,7 @@ class FourierImageAnimation {
     
     // Generate new curve and start transition
     transitionToNewCurve() {
+        console.log('transitionToNewCurve called');
         // Store current state (deep copy)
         this.prevCoeffs = this.baseCoeffs.map(c => ({
             freq: c.freq,
@@ -1369,6 +1321,7 @@ class FourierImageAnimation {
         
         // Generate new curve
         this.parametricPath = this.generateRandomParametricPath();
+        console.log('Generated new parametric path with', this.parametricPath.length, 'points');
         
         // Center the new path
         const bx = this.parametricPath.reduce((s, p) => s + p.x, 0) / this.parametricPath.length;
@@ -1377,13 +1330,16 @@ class FourierImageAnimation {
         
         // Compute new DFT
         const newCoeffs = this.computeDFTForPoints(this.baseCentered);
+        console.log('Computed new DFT with', newCoeffs.length, 'coefficients');
         
         // Update max amplitude (interpolate smoothly)
         const newMaxAmp = newCoeffs.length > 0 ? Math.max(...newCoeffs.map(c => c.amp)) : 1;
         
-        // Start transition
+        // Start transition - reset progress and update lastCurveChange
         this.transitionProgress = 0.0;
+        this.transitionStartTime = Date.now(); // Track when transition actually started
         this.baseCoeffs = newCoeffs;
+        console.log('Transition started, progress:', this.transitionProgress, 'startTime:', this.transitionStartTime);
         // Don't update maxAmplitude immediately - let it interpolate
     }
     
@@ -1521,25 +1477,32 @@ class FourierImageAnimation {
         
         // Use parametric path approach (if baseCoeffs exists)
         if (this.baseCoeffs) {
-            // Only allow new curve transitions when user is NOT following cursor
-            // This prevents animation restarts while following
-            const allowTransition = this.cursorModeProgress < 0.2;
             const now = Date.now();
             
-            if (allowTransition) {
-                if (now - this.lastCurveChange > this.curveChangeInterval && this.transitionProgress >= 1.0) {
-                    this.transitionToNewCurve();
+            // Update transition progress (time-based for consistency)
+            if (this.transitionProgress < 1.0 && this.transitionStartTime) {
+                // Calculate elapsed time since transition started
+                const elapsed = now - this.transitionStartTime;
+                this.transitionProgress = Math.min(1.0, elapsed / this.transitionDuration);
+                
+                // When transition completes, update lastCurveChange to track when we can start next one
+                if (this.transitionProgress >= 1.0) {
                     this.lastCurveChange = now;
+                    this.transitionStartTime = null; // Clear transition start time
                 }
             } else {
-                // While following, keep the timer fresh so nothing fires immediately after
-                this.lastCurveChange = now;
+                // Ensure transitionProgress stays at 1.0 when complete
+                if (this.transitionProgress >= 1.0) {
+                    this.transitionProgress = 1.0;
+                }
             }
             
-            // Update transition progress (time-based for consistency)
-            if (this.transitionProgress < 1.0) {
-                const elapsed = Date.now() - this.lastCurveChange;
-                this.transitionProgress = Math.min(1.0, elapsed / this.transitionDuration);
+            // Check if enough time has passed since last curve change (or transition completion)
+            // Also ensure we're not currently in a transition
+            const timeSinceLastChange = now - this.lastCurveChange;
+            if (timeSinceLastChange >= this.curveChangeInterval && this.transitionProgress >= 1.0 && !this.transitionStartTime) {
+                console.log('Starting new curve transition at', now, 'time since last:', timeSinceLastChange);
+                this.transitionToNewCurve();
             }
             
             // Smoothly interpolate max amplitude during transition
@@ -1550,8 +1513,8 @@ class FourierImageAnimation {
                 this.maxAmplitude = (1 - t) * prevMaxAmp + t * newMaxAmp;
             }
             
-            // Draw interpolated target path (ghost outline) - only when not following cursor
-            if (!this.isFollowingCursor && this.parametricPath && this.parametricPath.length > 1) {
+            // Draw interpolated target path (ghost outline)
+            if (this.parametricPath && this.parametricPath.length > 1) {
                 ctx.globalAlpha = 0.2 * (1 - this.transitionProgress * 0.5);
                 ctx.beginPath();
                 ctx.moveTo(this.parametricPath[0].x, this.parametricPath[0].y);
@@ -1715,6 +1678,119 @@ class FourierImageAnimation {
     }
 }
 
+// Simple rotating cube for navigation bar
+class NavCubeAnimation {
+    constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        if (!this.canvas) return;
+        
+        this.ctx = this.canvas.getContext('2d');
+        this.size = 48; // Larger canvas to accommodate bigger cube
+        this.canvas.width = this.size;
+        this.canvas.height = this.size;
+        
+        this.cubeSize = 10; // Bigger cube
+        this.rotation = { A: 0, B: 0, C: 0 };
+        this.rotationSpeed = { A: 0.02, B: 0.03, C: 0.01 };
+        
+        this.colors = ['#6e5c54', '#584e49', '#4b3f3a'];
+        this.bgColor = 'transparent';
+        
+        this.animate();
+    }
+    
+    rotate3D(x, y, z, A, B, C) {
+        // Rotate around X axis
+        let x1 = x;
+        let y1 = y * Math.cos(A) - z * Math.sin(A);
+        let z1 = y * Math.sin(A) + z * Math.cos(A);
+        
+        // Rotate around Y axis
+        let x2 = x1 * Math.cos(B) + z1 * Math.sin(B);
+        let y2 = y1;
+        let z2 = -x1 * Math.sin(B) + z1 * Math.cos(B);
+        
+        // Rotate around Z axis
+        let x3 = x2 * Math.cos(C) - y2 * Math.sin(C);
+        let y3 = x2 * Math.sin(C) + y2 * Math.cos(C);
+        let z3 = z2;
+        
+        return { x: x3, y: y3, z: z3 };
+    }
+    
+    project3D(x, y, z) {
+        const distance = 60; // Increased distance for better perspective
+        const scale = 1.0; // Scale to fit within bounds
+        const fov = distance;
+        const px = (x * fov) / (z + distance) * scale;
+        const py = (y * fov) / (z + distance) * scale;
+        return { x: px, y: py, z: z };
+    }
+    
+    drawCube() {
+        const ctx = this.ctx;
+        const centerX = this.size / 2;
+        const centerY = this.size / 2;
+        const s = this.cubeSize;
+        
+        // Cube vertices
+        const vertices = [
+            [-s, -s, -s], [s, -s, -s], [s, s, -s], [-s, s, -s],
+            [-s, -s, s], [s, -s, s], [s, s, s], [-s, s, s]
+        ];
+        
+        // Project vertices
+        const projected = vertices.map(v => {
+            const rotated = this.rotate3D(v[0], v[1], v[2], 
+                this.rotation.A, this.rotation.B, this.rotation.C);
+            const proj = this.project3D(rotated.x, rotated.y, rotated.z);
+            return {
+                x: centerX + proj.x,
+                y: centerY + proj.y,
+                z: proj.z
+            };
+        });
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, this.size, this.size);
+        
+        // Draw cube edges (wireframe style)
+        const edges = [
+            [0, 1], [1, 2], [2, 3], [3, 0], // Front face
+            [4, 5], [5, 6], [6, 7], [7, 4], // Back face
+            [0, 4], [1, 5], [2, 6], [3, 7]  // Connecting edges
+        ];
+        
+        ctx.strokeStyle = this.colors[0];
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.9;
+        
+        edges.forEach(([start, end]) => {
+            const p1 = projected[start];
+            const p2 = projected[end];
+            
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+        });
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    animate() {
+        // Update rotation
+        this.rotation.A += this.rotationSpeed.A;
+        this.rotation.B += this.rotationSpeed.B;
+        this.rotation.C += this.rotationSpeed.C;
+        
+        // Draw cube
+        this.drawCube();
+        
+        requestAnimationFrame(() => this.animate());
+    }
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('cubeCanvas')) {
@@ -1724,6 +1800,11 @@ document.addEventListener('DOMContentLoaded', function() {
             samplePoints: 600,
             sizeScale: 0.8
         });
+    }
+    
+    // Initialize navigation cube animation
+    if (document.getElementById('navCubeCanvas')) {
+        new NavCubeAnimation('navCubeCanvas');
     }
 });
 

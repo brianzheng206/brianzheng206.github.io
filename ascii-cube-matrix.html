@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Cube Matrix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #372c29;
+            font-family: 'Courier New', monospace;
+            color: #6e5c54;
+            height: 100vh;
+            cursor: grab;
+        }
+
+        body.dragging {
+            cursor: grabbing;
+        }
+
+        #container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background-color: #372c29;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #6e5c54;
+            background-color: rgba(55, 44, 41, 0.8);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(110, 92, 84, 0.3);
+            font-size: 14px;
+            line-height: 1.6;
+            z-index: 1000;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+        }
+
+        .info h1 {
+            color: #6e5c54;
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .info p {
+            color: #8a7a72;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .attribution {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            color: #6e5c54;
+            background-color: rgba(55, 44, 41, 0.8);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(110, 92, 84, 0.3);
+            font-size: 11px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .attribution a {
+            color: #8a7a72;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .attribution a:hover {
+            color: #6e5c54;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="info">
+        <h1>ASCII Cube Matrix</h1>
+        <p>Cubes rotate automatically</p>
+        <p>Drag to control rotation</p>
+        <p>Scroll to zoom</p>
+    </div>
+
+    <div class="attribution">
+        Inspired by <a href="https://github.com/tarantino07/cube.c" target="_blank" rel="noopener noreferrer">cube.c</a>
+    </div>
+
+    <script>
+        class ASCIICubeMatrix {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Canvas setup
+                this.charWidth = 8;
+                this.charHeight = 16;
+                this.scale = 1.0;
+                this.width = 160;
+                this.height = 44;
+                this.updateCanvasSize();
+                
+                // Z-buffer and character buffer
+                this.zBuffer = new Float32Array(this.width * this.height);
+                this.buffer = new Array(this.width * this.height);
+                this.backgroundASCIICode = '.';
+                
+                // Camera and projection
+                this.distanceFromCam = 100;
+                this.K1 = 40;
+                this.incrementSpeed = 0.6;
+                
+                // Rotation angles (A, B, C from reference code)
+                // Start with some rotation so cubes are visible
+                this.A = 0.5;
+                this.B = 0.5;
+                this.C = 0.1;
+                
+                // Auto-rotation speeds (slightly slower than reference code)
+                this.autoRotateSpeedA = 0.03;
+                this.autoRotateSpeedB = 0.03;
+                this.autoRotateSpeedC = 0.006;
+                
+                // Orbital motion for smaller cube
+                this.orbitAngle = 0;
+                this.orbitSpeed = 0.02;
+                
+                // Separate rotation for orbiting cube (rotates independently)
+                this.orbitCubeRotationA = 0;
+                this.orbitCubeRotationB = 0;
+                this.orbitCubeRotationC = 0;
+                this.orbitCubeRotSpeedA = 0.04;
+                this.orbitCubeRotSpeedB = 0.05;
+                this.orbitCubeRotSpeedC = 0.03;
+                
+                // Drag state
+                this.isDragging = false;
+                this.lastMouseX = 0;
+                this.lastMouseY = 0;
+                
+                // Colors matching website theme
+                this.colors = {
+                    background: '#372c29',
+                    text: '#6e5c54',
+                    textSecondary: '#8a7a72',
+                    textTertiary: '#584e49'
+                };
+                
+                // Make text slightly brighter for better visibility
+                this.textColor = '#8a7a72';
+                
+                this.setupEventListeners();
+                this.animate();
+            }
+            
+            updateCanvasSize() {
+                // Scale canvas to fit screen while maintaining character grid
+                const scaleX = window.innerWidth / (this.width * this.charWidth);
+                const scaleY = (window.innerHeight - 100) / (this.height * this.charHeight);
+                this.scale = Math.min(scaleX, scaleY, 3.0);
+                
+                // Ensure minimum scale
+                if (this.scale < 0.5) this.scale = 0.5;
+                
+                this.canvas.width = this.width * this.charWidth * this.scale;
+                this.canvas.height = this.height * this.charHeight * this.scale;
+                
+                // Re-set context properties after canvas resize (context is lost when canvas size changes)
+                this.ctx.font = `${this.charHeight * this.scale}px 'Courier New', monospace`;
+                this.ctx.fillStyle = this.textColor;
+                this.ctx.textAlign = 'left';
+                this.ctx.textBaseline = 'top';
+            }
+            
+            setupEventListeners() {
+                // Mouse drag
+                this.canvas.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.lastMouseX = e.clientX;
+                    this.lastMouseY = e.clientY;
+                    document.body.classList.add('dragging');
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (this.isDragging) {
+                        const deltaX = e.clientX - this.lastMouseX;
+                        const deltaY = e.clientY - this.lastMouseY;
+                        
+                        // Horizontal drag rotates around Y axis (left/right spin)
+                        // Vertical drag rotates around X axis (up/down tilt)
+                        this.B += deltaX * 0.01;
+                        this.A -= deltaY * 0.01; // Inverted for natural feel
+                        
+                        this.lastMouseX = e.clientX;
+                        this.lastMouseY = e.clientY;
+                    }
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    this.isDragging = false;
+                    document.body.classList.remove('dragging');
+                });
+                
+                // Touch support
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.isDragging = true;
+                    const touch = e.touches[0];
+                    this.lastMouseX = touch.clientX;
+                    this.lastMouseY = touch.clientY;
+                });
+                
+                document.addEventListener('touchmove', (e) => {
+                    if (this.isDragging) {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const deltaX = touch.clientX - this.lastMouseX;
+                        const deltaY = touch.clientY - this.lastMouseY;
+                        
+                        // Horizontal drag rotates around Y axis (left/right spin)
+                        // Vertical drag rotates around X axis (up/down tilt)
+                        this.B += deltaX * 0.01;
+                        this.A -= deltaY * 0.01; // Inverted for natural feel
+                        
+                        this.lastMouseX = touch.clientX;
+                        this.lastMouseY = touch.clientY;
+                    }
+                });
+                
+                document.addEventListener('touchend', () => {
+                    this.isDragging = false;
+                });
+                
+                // Zoom with scroll
+                this.canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                    this.scale = Math.max(0.5, Math.min(3.0, this.scale * delta));
+                    this.updateCanvasSize();
+                });
+                
+                // Window resize
+                window.addEventListener('resize', () => {
+                    this.updateCanvasSize();
+                });
+            }
+            
+            // Rotation functions matching the C code
+            calculateX(i, j, k) {
+                return j * Math.sin(this.A) * Math.sin(this.B) * Math.cos(this.C) - 
+                       k * Math.cos(this.A) * Math.sin(this.B) * Math.cos(this.C) +
+                       j * Math.cos(this.A) * Math.sin(this.C) + 
+                       k * Math.sin(this.A) * Math.sin(this.C) + 
+                       i * Math.cos(this.B) * Math.cos(this.C);
+            }
+            
+            calculateY(i, j, k) {
+                return j * Math.cos(this.A) * Math.cos(this.C) + 
+                       k * Math.sin(this.A) * Math.cos(this.C) -
+                       j * Math.sin(this.A) * Math.sin(this.B) * Math.sin(this.C) + 
+                       k * Math.cos(this.A) * Math.sin(this.B) * Math.sin(this.C) -
+                       i * Math.cos(this.B) * Math.sin(this.C);
+            }
+            
+            calculateZ(i, j, k) {
+                return k * Math.cos(this.A) * Math.cos(this.B) - 
+                       j * Math.sin(this.A) * Math.cos(this.B) + 
+                       i * Math.sin(this.B);
+            }
+            
+            // 3D rotation function for orbiting cube (takes rotation angles as parameters)
+            rotate3D(x, y, z, rx, ry, rz) {
+                // Rotate around X axis
+                let x1 = x;
+                let y1 = y * Math.cos(rx) - z * Math.sin(rx);
+                let z1 = y * Math.sin(rx) + z * Math.cos(rx);
+                
+                // Rotate around Y axis
+                let x2 = x1 * Math.cos(ry) + z1 * Math.sin(ry);
+                let y2 = y1;
+                let z2 = -x1 * Math.sin(ry) + z1 * Math.cos(ry);
+                
+                // Rotate around Z axis
+                let x3 = x2 * Math.cos(rz) - y2 * Math.sin(rz);
+                let y3 = x2 * Math.sin(rz) + y2 * Math.cos(rz);
+                let z3 = z2;
+                
+                return { x: x3, y: y3, z: z3 };
+            }
+            
+            calculateForSurface(cubeX, cubeY, cubeZ, ch) {
+                const x = this.calculateX(cubeX, cubeY, cubeZ);
+                const y = this.calculateY(cubeX, cubeY, cubeZ);
+                const z = this.calculateZ(cubeX, cubeY, cubeZ) + this.distanceFromCam;
+                
+                // Only render if z is positive (in front of camera)
+                if (z <= 0) return;
+                
+                const ooz = 1 / z;
+                
+                const xp = Math.floor(this.width / 2 + this.K1 * ooz * x * 2);
+                const yp = Math.floor(this.height / 2 + this.K1 * ooz * y);
+                
+                const idx = xp + yp * this.width;
+                if (idx >= 0 && idx < this.width * this.height) {
+                    if (ooz > this.zBuffer[idx]) {
+                        this.zBuffer[idx] = ooz;
+                        this.buffer[idx] = ch;
+                    }
+                }
+            }
+            
+            render() {
+                // Clear buffers
+                for (let i = 0; i < this.width * this.height; i++) {
+                    this.buffer[i] = this.backgroundASCIICode;
+                    this.zBuffer[i] = 0;
+                }
+                
+                // Draw multiple cubes of different sizes (matching reference code)
+                let cubeWidth = 20;
+                let horizontalOffset = -2 * cubeWidth;
+                
+                // First cube (centered)
+                for (let cubeX = -cubeWidth; cubeX < cubeWidth; cubeX += this.incrementSpeed) {
+                    for (let cubeY = -cubeWidth; cubeY < cubeWidth; cubeY += this.incrementSpeed) {
+                        this.calculateForSurface(cubeX, cubeY, -cubeWidth, '@');
+                        this.calculateForSurface(cubeWidth, cubeY, cubeX, '$');
+                        this.calculateForSurface(-cubeWidth, cubeY, -cubeX, '~');
+                        this.calculateForSurface(-cubeX, cubeY, cubeWidth, '#');
+                        this.calculateForSurface(cubeX, -cubeWidth, -cubeY, ';');
+                        this.calculateForSurface(cubeX, cubeWidth, cubeY, '+');
+                    }
+                }
+                
+                cubeWidth = 10;
+                // Second cube - 3D orbit around center cube
+                const orbitRadius = 40; // Distance from center
+                // 3D orbit: X, Y, Z all vary to create a 3D orbital path
+                const orbitX = Math.cos(this.orbitAngle) * orbitRadius;
+                const orbitY = Math.sin(this.orbitAngle * 1.3) * orbitRadius * 0.6; // Different frequency for Y
+                const orbitZ = Math.sin(this.orbitAngle) * orbitRadius;
+                
+                // Rotate orbiting cube's local coordinates before applying orbit offset
+                for (let cubeX = -cubeWidth; cubeX < cubeWidth; cubeX += this.incrementSpeed) {
+                    for (let cubeY = -cubeWidth; cubeY < cubeWidth; cubeY += this.incrementSpeed) {
+                        // Apply local rotation to cube coordinates
+                        const rotX1 = this.rotate3D(cubeX, cubeY, -cubeWidth, 
+                            this.orbitCubeRotationA, this.orbitCubeRotationB, this.orbitCubeRotationC);
+                        const rotX2 = this.rotate3D(cubeWidth, cubeY, cubeX,
+                            this.orbitCubeRotationA, this.orbitCubeRotationB, this.orbitCubeRotationC);
+                        const rotX3 = this.rotate3D(-cubeWidth, cubeY, -cubeX,
+                            this.orbitCubeRotationA, this.orbitCubeRotationB, this.orbitCubeRotationC);
+                        const rotX4 = this.rotate3D(-cubeX, cubeY, cubeWidth,
+                            this.orbitCubeRotationA, this.orbitCubeRotationB, this.orbitCubeRotationC);
+                        const rotX5 = this.rotate3D(cubeX, -cubeWidth, -cubeY,
+                            this.orbitCubeRotationA, this.orbitCubeRotationB, this.orbitCubeRotationC);
+                        const rotX6 = this.rotate3D(cubeX, cubeWidth, cubeY,
+                            this.orbitCubeRotationA, this.orbitCubeRotationB, this.orbitCubeRotationC);
+                        
+                        // Apply orbit offset and render
+                        this.calculateForSurface(rotX1.x + orbitX, rotX1.y + orbitY, rotX1.z + orbitZ, '@');
+                        this.calculateForSurface(rotX2.x + orbitX, rotX2.y + orbitY, rotX2.z + orbitZ, '$');
+                        this.calculateForSurface(rotX3.x + orbitX, rotX3.y + orbitY, rotX3.z + orbitZ, '~');
+                        this.calculateForSurface(rotX4.x + orbitX, rotX4.y + orbitY, rotX4.z + orbitZ, '#');
+                        this.calculateForSurface(rotX5.x + orbitX, rotX5.y + orbitY, rotX5.z + orbitZ, ';');
+                        this.calculateForSurface(rotX6.x + orbitX, rotX6.y + orbitY, rotX6.z + orbitZ, '+');
+                    }
+                }
+                
+                // Draw buffer to canvas
+                this.ctx.fillStyle = this.colors.background;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.ctx.fillStyle = this.textColor;
+                this.ctx.font = `${this.charHeight * this.scale}px 'Courier New', monospace`;
+                this.ctx.textAlign = 'left';
+                this.ctx.textBaseline = 'top';
+                
+                for (let k = 0; k < this.width * this.height; k++) {
+                    const x = (k % this.width) * this.charWidth * this.scale;
+                    const y = Math.floor(k / this.width) * this.charHeight * this.scale;
+                    this.ctx.fillText(this.buffer[k], x, y);
+                }
+            }
+            
+            animate() {
+                // Auto-rotate when not dragging
+                if (!this.isDragging) {
+                    this.A += this.autoRotateSpeedA;
+                    this.B += this.autoRotateSpeedB;
+                    this.C += this.autoRotateSpeedC;
+                }
+                
+                // Update orbital motion
+                this.orbitAngle += this.orbitSpeed;
+                
+                // Update orbiting cube's independent rotation
+                this.orbitCubeRotationA += this.orbitCubeRotSpeedA;
+                this.orbitCubeRotationB += this.orbitCubeRotSpeedB;
+                this.orbitCubeRotationC += this.orbitCubeRotSpeedC;
+                
+                this.render();
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            new ASCIICubeMatrix('canvas');
+        });
+    </script>
+</body>
+</html>
