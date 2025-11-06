@@ -9,29 +9,29 @@
 }
 
 :root {
-    /* Color Palette */
-    --color-black: #000000;
-    --color-darkest: #1a151f;
-    --color-darker: #241e2a;
-    --color-medium: #2c2433;
-    --color-lighter: #393041;
+    /* Color Palette - Brown/Taupe Theme */
+    --color-lightest: #6e5c54;  /* Lightest brown - for accents */
+    --color-medium-dark: #584e49;  /* Medium-dark brown - for cards */
+    --color-medium: #4b3f3a;  /* Medium brown - for borders, secondary elements */
+    --color-dark: #3d332d;  /* Dark brown - for sections */
+    --color-darkest: #372c29;  /* Darkest brown - for main background */
     
     /* Colors */
-    --primary-color: #393041;
-    --primary-dark: #2c2433;
-    --primary-light: #4a4151;
-    --secondary-color: #241e2a;
-    --accent-color: #393041;
+    --primary-color: #6e5c54;
+    --primary-dark: #4b3f3a;
+    --primary-light: #7a6b63;
+    --secondary-color: #584e49;
+    --accent-color: #6e5c54;
     --text-primary: #ffffff;
-    --text-secondary: #e0e0e0;
-    --text-light: #b0b0b0;
-    --bg-primary: #000000;
-    --bg-secondary: #1a151f;
-    --bg-tertiary: #241e2a;
-    --bg-card: #2c2433;
-    --bg-dark: #1a151f;
-    --border-color: #2c2433;
-    --border-light: #393041;
+    --text-secondary: #e8e6e4;
+    --text-light: #c9c5c2;
+    --bg-primary: #372c29;
+    --bg-secondary: #3d332d;
+    --bg-tertiary: #4b3f3a;
+    --bg-card: #584e49;
+    --bg-dark: #3d332d;
+    --border-color: #4b3f3a;
+    --border-light: #6e5c54;
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
@@ -181,7 +181,7 @@ section {
     left: 0;
     right: 0;
     height: var(--nav-height);
-    background-color: rgba(26, 21, 31, 0.95);
+    background-color: rgba(61, 51, 45, 0.95);
     backdrop-filter: blur(10px);
     box-shadow: var(--shadow-sm);
     z-index: 1000;
@@ -229,7 +229,7 @@ section {
     left: 0;
     width: 0;
     height: 2px;
-    background-color: var(--color-lighter);
+    background-color: var(--color-lightest);
     transition: width var(--transition-base);
 }
 
@@ -274,7 +274,7 @@ section {
 }
 
 .btn-primary {
-    background-color: var(--color-lighter);
+    background-color: var(--color-lightest);
     color: var(--text-primary);
 }
 
@@ -291,7 +291,7 @@ section {
 }
 
 .btn-secondary:hover {
-    background-color: var(--color-lighter);
+    background-color: var(--color-medium-dark);
     color: var(--text-primary);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
@@ -306,7 +306,7 @@ section {
 .btn-outline:hover {
     background-color: var(--color-medium);
     color: var(--text-primary);
-    border-color: var(--color-lighter);
+    border-color: var(--color-lightest);
 }
 
 /* ========================================
@@ -323,15 +323,27 @@ section {
     overflow: hidden;
 }
 
+.hero-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
 .hero-background {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, var(--color-darkest) 0%, var(--color-darker) 50%, var(--color-medium) 100%);
+    background: linear-gradient(135deg, rgba(55,44,41,0.3) 0%, rgba(61,51,45,0.3) 50%, rgba(75,63,58,0.3) 100%);
     opacity: 1;
-    z-index: -1;
+    z-index: 1;
+    pointer-events: none;
 }
 
 .hero-content {
@@ -340,6 +352,8 @@ section {
     gap: var(--spacing-3xl);
     align-items: center;
     width: 100%;
+    position: relative;
+    z-index: 2;
 }
 
 .hero-image {
@@ -351,8 +365,10 @@ section {
     height: 300px;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid var(--color-lighter);
+    border: 4px solid var(--color-lightest);
     box-shadow: var(--shadow-xl);
+    position: relative;
+    z-index: 3;
 }
 
 .hero-text {
@@ -390,6 +406,7 @@ section {
     left: 50%;
     transform: translateX(-50%);
     animation: bounce 2s infinite;
+    z-index: 2;
 }
 
 .scroll-indicator a {
