@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building a Morse Code Robot with LEGO EV3 - Brian Zheng</title>
+    <meta name="description" content="A deep dive into creating an autonomous robot that communicates using Morse code with LEGO EV3.">
+    
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="../../index.html">Brian Zheng</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="../../index.html#home" class="nav-link">Home</a></li>
+                <li><a href="../../index.html#blog" class="nav-link">Back to Blog</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <article class="blog-post" style="max-width: 800px; margin: 100px auto; padding: 0 var(--spacing-lg);">
+        <header class="blog-post-header" style="margin-bottom: var(--spacing-3xl);">
+            <span class="blog-date">January 2025</span>
+            <h1 style="font-size: var(--font-size-4xl); margin-bottom: var(--spacing-lg);">Building a Morse Code Robot with LEGO EV3</h1>
+            <div class="blog-meta">
+                <span class="blog-reading-time">5 min read</span>
+            </div>
+        </header>
+
+        <div class="blog-post-content" style="line-height: 1.8; font-size: var(--font-size-lg);">
+            <p style="font-size: var(--font-size-xl); color: var(--text-secondary); margin-bottom: var(--spacing-xl);">
+                A deep dive into creating an autonomous robot that communicates using Morse code, covering hardware design, sensor integration, and algorithmic implementation.
+            </p>
+
+            <h2>Introduction</h2>
+            <p>
+                In this project, I set out to build a robot using LEGO EV3 that could encode and transmit messages using Morse code. The challenge combined hardware design, sensor programming, and algorithmic thinking.
+            </p>
+
+            <h2>The Problem</h2>
+            <p>
+                Creating a robot system that could:
+            </p>
+            <ul style="margin-left: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+                <li>Accept text input from the user</li>
+                <li>Convert text to Morse code</li>
+                <li>Transmit Morse code using visual or audio signals</li>
+                <li>Provide feedback during transmission</li>
+            </ul>
+
+            <h2>Hardware Design</h2>
+            <p>
+                I designed the robot with the following components:
+            </p>
+            <ul style="margin-left: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+                <li>LEGO EV3 Intelligent Brick (main controller)</li>
+                <li>Large motors for movement</li>
+                <li>LED lights for visual Morse code output</li>
+                <li>Sound sensors for audio feedback</li>
+                <li>Touch sensors for user interaction</li>
+            </ul>
+
+            <h2>Software Implementation</h2>
+            <p>
+                The core algorithm involved creating a lookup table for Morse code characters and implementing timing logic for dots and dashes. I used the EV3 software's block programming initially, then transitioned to EV3 Python for more flexibility.
+            </p>
+
+            <pre style="background-color: var(--bg-secondary); padding: var(--spacing-lg); border-radius: 8px; overflow-x: auto; margin: var(--spacing-lg) 0;"><code># Simplified Morse code encoder
+MORSE_CODE = {
+    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..',
+    'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
+    # ... more characters
+}
+
+def encode_to_morse(text):
+    return ' '.join([MORSE_CODE.get(char.upper(), '') 
+                     for char in text])</code></pre>
+
+            <h2>Challenges and Solutions</h2>
+            <p>
+                One major challenge was timing accuracy. Morse code requires precise timing, and the EV3 brick's timing wasn't always consistent. I solved this by using hardware timers and calibrating based on the system clock.
+            </p>
+
+            <h2>Results</h2>
+            <p>
+                The robot successfully transmitted messages in Morse code with about 95% accuracy. The visual LED output was clear, and the timing was consistent enough for manual decoding.
+            </p>
+
+            <h2>Lessons Learned</h2>
+            <ul style="margin-left: var(--spacing-xl);">
+                <li>Hardware timing requires careful calibration</li>
+                <li>User feedback is crucial for debugging</li>
+                <li>Simple algorithms can be surprisingly effective</li>
+            </ul>
+
+            <div style="margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--border-color);">
+                <a href="../../index.html#blog" style="color: var(--primary-color); font-weight: 600;">
+                    <i class="fas fa-arrow-left"></i> Back to Blog
+                </a>
+            </div>
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-copyright">&copy; <span id="currentYear">2025</span> Brian Zheng. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../assets/js/main.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Brian Zheng - Mechatronics Engineer and Robotics Developer. Building intelligent systems that bridge hardware and AI.">
+    <meta name="keywords" content="Mechatronics, Robotics, Engineering, Embedded Systems, AI">
+    <meta name="author" content="Brian Zheng">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://brianzheng.com/">
+    <meta property="og:title" content="Brian Zheng - Mechatronics Engineer">
+    <meta property="og:description" content="Building intelligent systems that bridge hardware and AI.">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://brianzheng.com/">
+    <meta property="twitter:title" content="Brian Zheng - Mechatronics Engineer">
+    <meta property="twitter:description" content="Building intelligent systems that bridge hardware and AI.">
+    
+    <title>Brian Zheng - Mechatronics Engineer</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/images/favicon.ico">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/components.css">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="#home">Brian Zheng</a>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#home" class="nav-link">Home</a></li>
+                <li><a href="#projects" class="nav-link">Projects</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#resume" class="nav-link">Resume</a></li>
+                <li><a href="#skills" class="nav-link">Skills</a></li>
+                <li><a href="#achievements" class="nav-link">Experience</a></li>
+                <li><a href="#blog" class="nav-link">Blog</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero / Intro Section -->
+    <section id="home" class="hero">
+        <div class="hero-background"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-image">
+                    <img src="assets/images/profile/headshot.jpg" alt="Brian Zheng" id="profileImage">
+                </div>
+                <div class="hero-text">
+                    <h1 class="hero-name">Brian Zheng</h1>
+                    <h2 class="hero-title">Mechatronics Engineer</h2>
+                    <p class="hero-tagline">Building intelligent systems that bridge hardware and AI.</p>
+                    <div class="hero-cta">
+                        <a href="#projects" class="btn btn-primary">View Projects</a>
+                        <a href="assets/docs/resume.pdf" class="btn btn-secondary" target="_blank">Resume</a>
+                        <a href="#contact" class="btn btn-outline">Contact Me</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-indicator">
+            <a href="#projects" aria-label="Scroll to projects">
+                <i class="fas fa-chevron-down"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- Projects / Portfolio Section -->
+    <section id="projects" class="projects">
+        <div class="container">
+            <h2 class="section-title">Projects</h2>
+            <p class="section-subtitle">A selection of my recent work and engineering projects</p>
+            
+            <!-- Project Filter (Optional) -->
+            <div class="project-filters" id="projectFilters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="robotics">Robotics</button>
+                <button class="filter-btn" data-filter="embedded">Embedded Systems</button>
+                <button class="filter-btn" data-filter="ai">AI/ML</button>
+                <button class="filter-btn" data-filter="hardware">Hardware</button>
+            </div>
+
+            <!-- Projects Grid -->
+            <div class="projects-grid" id="projectsGrid">
+                <!-- Project cards will be dynamically generated or manually added here -->
+                <article class="project-card" data-category="robotics">
+                    <div class="project-image">
+                        <img src="assets/images/projects/project-1.jpg" alt="Project 1">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="#" class="project-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                                <a href="#" class="project-link" aria-label="Demo"><i class="fas fa-external-link-alt"></i></a>
+                                <a href="#" class="project-link" aria-label="Video"><i class="fas fa-video"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Project Title</h3>
+                        <p class="project-description">Brief description of the project and what it accomplishes.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">ROS 2</span>
+                            <span class="tech-badge">Python</span>
+                            <span class="tech-badge">C++</span>
+                        </div>
+                        <div class="project-narrative">
+                            <div class="narrative-item">
+                                <strong>Problem:</strong> Describe the challenge or problem addressed.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Approach:</strong> Explain your methodology and technical approach.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Result:</strong> Highlight outcomes, metrics, and achievements.
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Add more project cards here -->
+                <article class="project-card" data-category="embedded">
+                    <div class="project-image">
+                        <img src="assets/images/projects/project-2.jpg" alt="Project 2">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="#" class="project-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                                <a href="#" class="project-link" aria-label="Demo"><i class="fas fa-external-link-alt"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Project Title 2</h3>
+                        <p class="project-description">Brief description of the project and what it accomplishes.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">Arduino</span>
+                            <span class="tech-badge">C++</span>
+                            <span class="tech-badge">Embedded</span>
+                        </div>
+                        <div class="project-narrative">
+                            <div class="narrative-item">
+                                <strong>Problem:</strong> Describe the challenge.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Approach:</strong> Explain methodology.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Result:</strong> Highlight outcomes.
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Me Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-text">
+                    <h2 class="section-title">About Me</h2>
+                    <div class="bio">
+                        <p>I'm a Mechatronics Engineering student at the University of Waterloo passionate about robotics and embedded systems. I love building intelligent systems that combine hardware and software to solve real-world problems.</p>
+                        <p>My journey in engineering started with a curiosity about how things work, which has evolved into a passion for creating innovative solutions. Whether it's designing perception systems for autonomous drones or developing embedded controllers, I'm always excited to tackle challenging problems.</p>
+                    </div>
+                    
+                    <div class="interests">
+                        <h3>Core Interests & Specialties</h3>
+                        <ul class="interest-list">
+                            <li><i class="fas fa-robot"></i> Perception Systems</li>
+                            <li><i class="fas fa-microchip"></i> Embedded Systems</li>
+                            <li><i class="fas fa-brain"></i> AI-Driven Control</li>
+                            <li><i class="fas fa-drone"></i> Drone Autonomy</li>
+                            <li><i class="fas fa-eye"></i> Computer Vision</li>
+                            <li><i class="fas fa-project-diagram"></i> Sensor Fusion</li>
+                        </ul>
+                    </div>
+
+                    <div class="personal-touch">
+                        <p><strong>Fun Fact:</strong> Outside of engineering, I love design, chess, and time-management education projects. I believe great engineering combines technical excellence with creative problem-solving.</p>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <img src="assets/images/profile/workspace.jpg" alt="Workspace">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resume Section -->
+    <section id="resume" class="resume">
+        <div class="container">
+            <h2 class="section-title">Resume</h2>
+            <p class="section-subtitle">Download my resume or view a summary below</p>
+            
+            <div class="resume-content">
+                <div class="resume-download">
+                    <a href="assets/docs/resume.pdf" class="btn btn-primary" download>
+                        <i class="fas fa-download"></i> Download Resume (PDF)
+                    </a>
+                    <p class="resume-updated">Last Updated: <span id="resumeDate">January 2025</span></p>
+                </div>
+
+                <!-- Optional PDF Preview -->
+                <div class="resume-preview">
+                    <iframe src="assets/docs/resume.pdf" type="application/pdf" class="resume-iframe"></iframe>
+                </div>
+
+                <!-- Skills Summary -->
+                <div class="resume-summary">
+                    <h3>Quick Summary</h3>
+                    <div class="skills-grid-summary">
+                        <div class="skill-category">
+                            <h4><i class="fas fa-code"></i> Languages</h4>
+                            <ul>
+                                <li>C++</li>
+                                <li>Python</li>
+                                <li>MATLAB</li>
+                                <li>JavaScript</li>
+                                <li>ROS 2</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h4><i class="fas fa-tools"></i> Tools</h4>
+                            <ul>
+                                <li>ROS 2</li>
+                                <li>TensorRT</li>
+                                <li>OpenCV</li>
+                                <li>SolidWorks</li>
+                                <li>KiCAD</li>
+                            </ul>
+                        </div>
+                        <div class="skill-category">
+                            <h4><i class="fas fa-microchip"></i> Hardware</h4>
+                            <ul>
+                                <li>Arduino</li>
+                                <li>Raspberry Pi</li>
+                                <li>NVIDIA Jetson</li>
+                                <li>LiDAR Sensors</li>
+                                <li>IMU Sensors</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills / Tech Stack Section -->
+    <section id="skills" class="skills">
+        <div class="container">
+            <h2 class="section-title">Skills & Tech Stack</h2>
+            <p class="section-subtitle">Technologies and tools I work with</p>
+
+            <div class="skills-container">
+                <div class="skill-category-card">
+                    <h3><i class="fas fa-laptop-code"></i> Software Development</h3>
+                    <div class="skill-icons">
+                        <div class="skill-icon" data-tooltip="C++">
+                            <i class="fab fa-cuttlefish"></i>
+                            <span>C++</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="Python">
+                            <i class="fab fa-python"></i>
+                            <span>Python</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="JavaScript">
+                            <i class="fab fa-js"></i>
+                            <span>JavaScript</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="MATLAB">
+                            <i class="fas fa-calculator"></i>
+                            <span>MATLAB</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="ROS 2">
+                            <i class="fas fa-robot"></i>
+                            <span>ROS 2</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="Git">
+                            <i class="fab fa-git-alt"></i>
+                            <span>Git</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="skill-category-card">
+                    <h3><i class="fas fa-wrench"></i> Hardware Design</h3>
+                    <div class="skill-icons">
+                        <div class="skill-icon" data-tooltip="SolidWorks">
+                            <i class="fas fa-cube"></i>
+                            <span>SolidWorks</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="KiCAD">
+                            <i class="fas fa-microchip"></i>
+                            <span>KiCAD</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="PCB Design">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>PCB Design</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="skill-category-card">
+                    <h3><i class="fas fa-chart-line"></i> Simulation & Analysis</h3>
+                    <div class="skill-icons">
+                        <div class="skill-icon" data-tooltip="Gazebo">
+                            <i class="fas fa-cube"></i>
+                            <span>Gazebo</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="Simulink">
+                            <i class="fas fa-project-diagram"></i>
+                            <span>Simulink</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="OpenCV">
+                            <i class="fas fa-eye"></i>
+                            <span>OpenCV</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="TensorRT">
+                            <i class="fas fa-brain"></i>
+                            <span>TensorRT</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="skill-category-card">
+                    <h3><i class="fas fa-toolbox"></i> Tools & Frameworks</h3>
+                    <div class="skill-icons">
+                        <div class="skill-icon" data-tooltip="Arduino">
+                            <i class="fas fa-microchip"></i>
+                            <span>Arduino</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="Raspberry Pi">
+                            <i class="fas fa-microchip"></i>
+                            <span>Raspberry Pi</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="Jetson">
+                            <i class="fas fa-microchip"></i>
+                            <span>Jetson</span>
+                        </div>
+                        <div class="skill-icon" data-tooltip="PyTorch">
+                            <i class="fas fa-brain"></i>
+                            <span>PyTorch</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Achievements / Experience Section -->
+    <section id="achievements" class="achievements">
+        <div class="container">
+            <h2 class="section-title">Experience & Achievements</h2>
+            <p class="section-subtitle">My professional journey and accomplishments</p>
+
+            <div class="experience-timeline">
+                <!-- Work Experience -->
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <i class="fas fa-briefcase"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <h3>Job Title</h3>
+                            <span class="timeline-date">Date Range</span>
+                        </div>
+                        <p class="timeline-company">Company Name</p>
+                        <ul class="timeline-description">
+                            <li>Key achievement or responsibility</li>
+                            <li>Project or contribution made</li>
+                            <li>Impact or result achieved</li>
+                        </ul>
+                        <div class="timeline-logo">
+                            <img src="assets/images/logos/company-logo.png" alt="Company Logo">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add more timeline items -->
+                <div class="timeline-item">
+                    <div class="timeline-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-header">
+                            <h3>Team Member / Role</h3>
+                            <span class="timeline-date">Date Range</span>
+                        </div>
+                        <p class="timeline-company">Team Name (e.g., Baja SAE, F1TENTH)</p>
+                        <ul class="timeline-description">
+                            <li>Contribution to team project</li>
+                            <li>Role and responsibilities</li>
+                            <li>Competition or achievement</li>
+                        </ul>
+                        <div class="timeline-logo">
+                            <img src="assets/images/logos/team-logo.png" alt="Team Logo">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Awards Section -->
+            <div class="awards-section">
+                <h3>Awards & Competitions</h3>
+                <div class="awards-grid">
+                    <div class="award-card">
+                        <i class="fas fa-trophy"></i>
+                        <h4>Award Name</h4>
+                        <p>Competition or Event</p>
+                        <span class="award-date">Year</span>
+                    </div>
+                    <!-- Add more award cards -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog / Writing Section -->
+    <section id="blog" class="blog">
+        <div class="container">
+            <h2 class="section-title">Blog & Writing</h2>
+            <p class="section-subtitle">Thoughts on projects, engineering, and technology</p>
+
+            <div class="blog-grid">
+                <article class="blog-card">
+                    <div class="blog-image">
+                        <img src="assets/images/blog/post-1.jpg" alt="Blog Post 1">
+                    </div>
+                    <div class="blog-content">
+                        <span class="blog-date">January 2025</span>
+                        <h3 class="blog-title">Building a Morse Code Robot with LEGO EV3</h3>
+                        <p class="blog-excerpt">A deep dive into creating an autonomous robot that communicates using Morse code, covering hardware design, sensor integration, and algorithmic implementation.</p>
+                        <div class="blog-meta">
+                            <span class="blog-reading-time">5 min read</span>
+                        </div>
+                        <a href="blog/posts/morse-code-robot.html" class="blog-link">Read More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </article>
+
+                <article class="blog-card">
+                    <div class="blog-image">
+                        <img src="assets/images/blog/post-2.jpg" alt="Blog Post 2">
+                    </div>
+                    <div class="blog-content">
+                        <span class="blog-date">December 2024</span>
+                        <h3 class="blog-title">Improving LiDAR–Camera Fusion in ROS 2</h3>
+                        <p class="blog-excerpt">Exploring techniques for better sensor fusion between LiDAR and camera data in ROS 2, including calibration methods and real-time processing optimizations.</p>
+                        <div class="blog-meta">
+                            <span class="blog-reading-time">8 min read</span>
+                        </div>
+                        <a href="blog/posts/lidar-camera-fusion.html" class="blog-link">Read More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </article>
+
+                <!-- Add more blog posts -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <p class="section-subtitle">Let's connect! I'm always open to discussing new projects, opportunities, or just having a conversation.</p>
+
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h4>Email</h4>
+                            <a href="mailto:your.email@example.com">your.email@example.com</a>
+                        </div>
+                    </div>
+                    <div class="contact-social">
+                        <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="https://devpost.com/yourusername" target="_blank" rel="noopener noreferrer" aria-label="Devpost">
+                            <i class="fab fa-dev"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="contact-form-wrapper">
+                    <form class="contact-form" id="contactForm" action="#" method="POST">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <input type="text" id="subject" name="subject" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        <!-- Honeypot for spam protection -->
+                        <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off">
+                        <button type="submit" class="btn btn-primary">Send Message</button>
+                        <div class="form-message" id="formMessage"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-copyright">&copy; <span id="currentYear">2025</span> Brian Zheng. All rights reserved.</p>
+                <div class="footer-social">
+                    <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                    <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="mailto:your.email@example.com" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+                <p class="footer-credits">Built from scratch with HTML, CSS, and JavaScript</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- Scripts -->
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/navigation.js"></script>
+    <script src="assets/js/projects.js"></script>
+    <script src="assets/js/contact.js"></script>
+</body>
+</html>
+

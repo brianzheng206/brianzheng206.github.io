@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Improving LiDAR–Camera Fusion in ROS 2 - Brian Zheng</title>
+    <meta name="description" content="Exploring techniques for better sensor fusion between LiDAR and camera data in ROS 2.">
+    
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="../../index.html">Brian Zheng</a>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="../../index.html#home" class="nav-link">Home</a></li>
+                <li><a href="../../index.html#blog" class="nav-link">Back to Blog</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <article class="blog-post" style="max-width: 800px; margin: 100px auto; padding: 0 var(--spacing-lg);">
+        <header class="blog-post-header" style="margin-bottom: var(--spacing-3xl);">
+            <span class="blog-date">December 2024</span>
+            <h1 style="font-size: var(--font-size-4xl); margin-bottom: var(--spacing-lg);">Improving LiDAR–Camera Fusion in ROS 2</h1>
+            <div class="blog-meta">
+                <span class="blog-reading-time">8 min read</span>
+            </div>
+        </header>
+
+        <div class="blog-post-content" style="line-height: 1.8; font-size: var(--font-size-lg);">
+            <p style="font-size: var(--font-size-xl); color: var(--text-secondary); margin-bottom: var(--spacing-xl);">
+                Exploring techniques for better sensor fusion between LiDAR and camera data in ROS 2, including calibration methods and real-time processing optimizations.
+            </p>
+
+            <h2>Introduction</h2>
+            <p>
+                Sensor fusion is a critical component in modern autonomous systems. Combining LiDAR's precise distance measurements with camera's rich visual information creates a more robust perception system. In this post, I'll share my experience improving LiDAR-camera fusion in ROS 2.
+            </p>
+
+            <h2>Why Sensor Fusion?</h2>
+            <p>
+                LiDAR provides excellent 3D spatial information but lacks texture and color details. Cameras offer rich visual context but struggle with depth estimation. By fusing these sensors, we can leverage the strengths of both.
+            </p>
+
+            <h2>Calibration Challenges</h2>
+            <p>
+                The first major challenge is accurate calibration between the LiDAR and camera coordinate systems. I used the following approach:
+            </p>
+            <ol style="margin-left: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+                <li>Physical mounting and measurement of sensor positions</li>
+                <li>Checkerboard-based camera calibration</li>
+                <li>Point cloud to image projection verification</li>
+                <li>Iterative refinement using real-world data</li>
+            </ol>
+
+            <h2>Implementation in ROS 2</h2>
+            <p>
+                I created custom ROS 2 nodes for:
+            </p>
+            <ul style="margin-left: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+                <li><strong>Calibration Node:</strong> Computed transformation matrices</li>
+                <li><strong>Fusion Node:</strong> Combined point clouds with image data</li>
+                <li><strong>Visualization Node:</strong> Overlay point clouds on camera images</li>
+            </ul>
+
+            <pre style="background-color: var(--bg-secondary); padding: var(--spacing-lg); border-radius: 8px; overflow-x: auto; margin: var(--spacing-lg) 0;"><code># Example: Point cloud to image projection
+import cv2
+import numpy as np
+
+def project_lidar_to_image(point_cloud, camera_matrix, transform_matrix):
+    points_3d = point_cloud.reshape(-1, 3)
+    points_camera = transform_matrix @ points_3d.T
+    points_2d = camera_matrix @ points_camera[:3, :]
+    return points_2d.T</code></pre>
+
+            <h2>Performance Optimizations</h2>
+            <p>
+                Real-time processing required several optimizations:
+            </p>
+            <ul style="margin-left: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+                <li>Downsampling point clouds for faster processing</li>
+                <li>Using GPU acceleration for image processing</li>
+                <li>Implementing efficient data structures for lookups</li>
+                <li>Optimizing ROS 2 message passing</li>
+            </ul>
+
+            <h2>Results</h2>
+            <p>
+                The improved fusion system achieved:
+            </p>
+            <ul style="margin-left: var(--spacing-xl); margin-bottom: var(--spacing-lg);">
+                <li>30% reduction in processing time</li>
+                <li>Improved accuracy in object detection</li>
+                <li>Better handling of edge cases (occlusions, lighting)</li>
+            </ul>
+
+            <h2>Conclusion</h2>
+            <p>
+                Sensor fusion is an iterative process. The key is starting with solid calibration and continuously refining based on real-world performance. ROS 2's modular architecture makes it an excellent platform for such work.
+            </p>
+
+            <div style="margin-top: var(--spacing-3xl); padding-top: var(--spacing-xl); border-top: 1px solid var(--border-color);">
+                <a href="../../index.html#blog" style="color: var(--primary-color); font-weight: 600;">
+                    <i class="fas fa-arrow-left"></i> Back to Blog
+                </a>
+            </div>
+        </div>
+    </article>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p class="footer-copyright">&copy; <span id="currentYear">2025</span> Brian Zheng. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../assets/js/main.js"></script>
+</body>
+</html>
+
