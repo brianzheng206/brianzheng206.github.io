@@ -271,48 +271,6 @@
                 <div class="resume-preview">
                     <iframe src="assets/docs/resume.pdf" type="application/pdf" class="resume-iframe"></iframe>
                 </div>
-
-                <!-- Skills Summary -->
-                <div class="resume-summary">
-                    <h3>Quick Summary</h3>
-                    <div class="skills-grid-summary">
-                        <div class="skill-category">
-                            <h4><i class="fas fa-code"></i> Languages</h4>
-                            <ul>
-                                <li>C/C++</li>
-                                <li>Python</li>
-                                <li>Java</li>
-                                <li>JavaScript</li>
-                                <li>HTML/CSS</li>
-                            </ul>
-                        </div>
-                        <div class="skill-category">
-                            <h4><i class="fas fa-book"></i> Libraries</h4>
-                            <ul>
-                                <li>PyTorch</li>
-                                <li>TensorRT</li>
-                                <li>OpenCV</li>
-                                <li>GStreamer</li>
-                                <li>OpenGL</li>
-                                <li>CUDA</li>
-                                <li>WebRTC</li>
-                            </ul>
-                        </div>
-                        <div class="skill-category">
-                            <h4><i class="fas fa-tools"></i> Developer Tools</h4>
-                            <ul>
-                                <li>ROS2</li>
-                                <li>Docker</li>
-                                <li>Git</li>
-                                <li>SOLIDWORKS</li>
-                                <li>CVAT</li>
-                                <li>AWS EC2</li>
-                                <li>Foxglove</li>
-                                <li>Linux/Ubuntu</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
@@ -464,24 +422,48 @@
                 </div>
 
                 <!-- WATonomous Experience -->
-                <div class="timeline-item">
+                <div class="timeline-item timeline-item-multi">
                     <div class="timeline-icon">
                         <i class="fas fa-users"></i>
                     </div>
                     <div class="timeline-content">
-                        <div class="timeline-header">
-                            <h3>Director of Eve Autonomy and Perception Software</h3>
-                            <span class="timeline-date">Jan 2025 - Present</span>
+                        <!-- Director Role -->
+                        <div class="timeline-role">
+                            <div class="timeline-header">
+                                <h3>Director of Eve Autonomy and Perception Software</h3>
+                                <span class="timeline-date">May 2025 - Present</span>
+                            </div>
+                            <p class="timeline-company">WATonomous • University of Waterloo</p>
+                            <ul class="timeline-description">
+                                <li>Leading a team of <strong>40+ members</strong> in the research and development of an autonomous Kia EV, incorporating AI/machine learning, sensor fusion, and complex path planning algorithms</li>
+                                <li>Developing <strong>ROS2 wrappers</strong> for LiDAR ground segmentation and CV multi-object tracking algorithms like <strong>ByteTrack</strong></li>
+                                <li>Developed a multi-modal <strong>3D object detection and tracking pipeline</strong> by fusing LiDAR and camera data, <strong>RANSAC Model Floor Segmentation</strong>, and class-parameterized <strong>DBSCAN clustering</strong> of batched <strong>YOLOv8</strong> detections</li>
+                                <li>Enhanced object detection pipeline performance by optimizing the <strong>YOLOv8 Model</strong> using <strong>TensorRT</strong> and <strong>CUDA GPU acceleration</strong>, maximizing hardware resources and inference speeds</li>
+                                <li>Implemented <strong>ROS2 Drivers</strong> and launch files for LiDAR and Cameras and calibrated camera intrinsics</li>
+                                <li>Implemented a hybrid <strong>A*</strong> and <strong>BFS</strong> search algorithm for local path planning and a <strong>Pure Pursuit</strong> and <strong>PID</strong> controller for path tracking</li>
+                            </ul>
                         </div>
-                        <p class="timeline-company">WATonomous • University of Waterloo</p>
-                        <ul class="timeline-description">
-                            <li>Leading a team of <strong>40+ members</strong> in the research and development of an autonomous Kia EV, incorporating AI/machine learning, sensor fusion, and complex path planning algorithms</li>
-                            <li>Developed a multi-modal <strong>3D object detection and tracking pipeline</strong> by fusing LiDAR and camera data, <strong>RANSAC Model Floor Segmentation</strong>, and class-parameterized <strong>DBSCAN clustering</strong> of batched <strong>YOLOv8</strong> detections</li>
-                            <li>Developing <strong>ROS2 wrappers</strong> for LiDAR ground segmentation and CV multi-object tracking algorithms like <strong>ByteTrack</strong></li>
-                            <li>Enhanced object detection pipeline performance by optimizing the <strong>YOLOv8 Model</strong> using <strong>TensorRT</strong> and <strong>CUDA GPU acceleration</strong>, maximizing hardware resources and inference speeds</li>
-                            <li>Implemented <strong>ROS2 Drivers</strong> and launch files for LiDAR and Cameras and calibrated camera intrinsics</li>
-                            <li>Implemented a hybrid <strong>A*</strong> and <strong>BFS</strong> search algorithm for local path planning and a <strong>Pure Pursuit</strong> and <strong>PID</strong> controller for path tracking</li>
-                        </ul>
+
+                        <!-- Role Divider -->
+                        <div class="timeline-role-divider"></div>
+
+                        <!-- Co-op Role -->
+                        <div class="timeline-role" id="coop-role">
+                            <div class="timeline-header">
+                                <h3>Robotic Systems Engineer</h3>
+                                <span class="timeline-date">Jan 2025 - May 2025</span>
+                            </div>
+                            <ul class="timeline-description">
+                                <li>Developed a multi-modal <strong>3D object detection and tracking pipeline</strong> by fusing LiDAR and camera data, <strong>RANSAC Model Floor Segmentation</strong>, and class-parameterized <strong>DBSCAN clustering</strong> of batched <strong>YOLOv8</strong> detections</li>
+                                <li>Enhanced object detection pipeline performance by optimizing the <strong>YOLOv8 Model</strong> using <strong>TensorRT</strong> and <strong>CUDA GPU acceleration</strong>, maximizing hardware resources and inference speeds</li>
+                                <li>Implemented <strong>ROS2 Drivers</strong> and launch files for LiDAR and Cameras and calibrated camera intrinsics</li>
+                                <li>Implemented a hybrid <strong>A*</strong> and <strong>BFS</strong> search algorithm for local path planning and a <strong>Pure Pursuit</strong> and <strong>PID</strong> controller for path tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Second icon for Co-op role -->
+                    <div class="timeline-icon timeline-icon-secondary">
+                        <i class="fas fa-briefcase"></i>
                     </div>
                 </div>
             </div>

@@ -126,3 +126,46 @@ if (!prefersReducedMotion.matches) {
     });
 }
 
+// Position secondary timeline icon for multi-role timeline items
+document.addEventListener('DOMContentLoaded', function() {
+    function positionSecondaryIcon() {
+        const secondaryIcon = document.querySelector('.timeline-icon-secondary');
+        const coopRole = document.getElementById('coop-role');
+        const timelineItem = document.querySelector('.timeline-item-multi');
+        const timelineContent = timelineItem ? timelineItem.querySelector('.timeline-content') : null;
+        const coopHeader = coopRole ? coopRole.querySelector('.timeline-header') : null;
+        
+        if (secondaryIcon && coopRole && timelineItem && timelineContent && coopHeader) {
+            // Get the position of the header relative to the timeline-content
+            const headerOffsetTop = coopHeader.offsetTop;
+            
+            // Get the position of timeline-content relative to timeline-item
+            // Since timeline-content is a direct child, we can use offsetTop
+            const contentOffsetTop = timelineContent.offsetTop;
+            
+            // Calculate total offset from timeline-item top
+            const totalOffset = contentOffsetTop + headerOffsetTop;
+            
+            // Align icon center with header center
+            const headerHeight = coopHeader.offsetHeight;
+            const iconHeight = secondaryIcon.offsetHeight;
+            const iconTop = totalOffset + (headerHeight / 2) - (iconHeight / 2);
+            
+            secondaryIcon.style.top = `${iconTop}px`;
+        }
+    }
+    
+    // Position on load
+    positionSecondaryIcon();
+    
+    // Reposition after a short delay to ensure layout is complete
+    setTimeout(positionSecondaryIcon, 100);
+    
+    // Reposition on window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(positionSecondaryIcon, 100);
+    });
+});
+
