@@ -61,9 +61,22 @@ class FourierImageAnimation {
         this.cursorSmoothing = 0.15; // How fast to follow cursor (0-1, higher = faster)
         this.returnToCenterSpeed = 0.10; // Slower speed for returning to center
         this.lastMouseMove = Date.now();
-        this.cursorTimeout = 5000; // 5 seconds of inactivity before returning to center
+        this.cursorTimeout = 7000; // 7 seconds of inactivity before starting fade
         this.cursorModeProgress = 0.0; // 0 = parametric, 1 = cursor (for smooth transition)
-        this.cursorModeTransitionSpeed = 0.02; // How fast to transition between modes
+        this.cursorModeTransitionSpeed = 0.01; // Slower blend for smoother transitions
+        
+        // Soft cursor engagement/decay (no hard boolean flips)
+        this.cursorModeTarget = false; // Target state (smoothly transitions)
+        
+        // Spring-damper for smooth center return
+        this._vx = 0; // Velocity X
+        this._vy = 0; // Velocity Y
+        
+        // Phase synchronization to prevent animation restart
+        // Store phase offsets when entering cursor mode, then apply continuously
+        this.cursorPhaseOffsets = null; // Map of freq -> phase offset
+        this.cursorPhaseOffsetsTime = null; // Time when offsets were calculated
+        this.lastParametricCoeffsHash = null; // Hash to detect coefficient changes
         
         // Generate simple Fourier pattern for cursor following (circle-like)
         this.cursorCoeffs = this.generateSimpleFourierPattern();
@@ -177,30 +190,30 @@ class FourierImageAnimation {
                         const cursorSmooth = 0.3; // How fast to follow cursor (higher = snappier)
                         this.targetX += (x - this.targetX) * cursorSmooth;
                         this.targetY += (y - this.targetY) * cursorSmooth;
-                        this.isFollowingCursor = true;
+                        this.cursorModeTarget = true; // Set target (will transition smoothly)
                         this.lastMouseMove = Date.now(); // Update last movement time
                     } else {
                         // Stop following (target will smoothly return to center)
-                        this.isFollowingCursor = false;
+                        this.cursorModeTarget = false;
                     }
                 } else {
                     // Other element is on top, stop following (target will smoothly return)
-                    this.isFollowingCursor = false;
+                    this.cursorModeTarget = false;
                 }
             } else {
                 // Not over canvas, stop following (target will smoothly return)
-                this.isFollowingCursor = false;
+                this.cursorModeTarget = false;
             }
         });
         
         // Stop following when mouse leaves canvas (target will smoothly return)
         this.canvas.addEventListener('mouseleave', () => {
-            this.isFollowingCursor = false;
+            this.cursorModeTarget = false;
         });
         
         // Stop following on scroll (target will smoothly return)
         window.addEventListener('scroll', () => {
-            this.isFollowingCursor = false;
+            this.cursorModeTarget = false;
         }, { passive: true });
         
         // Also handle touch events for mobile (optional)
@@ -1103,7 +1116,15 @@ class FourierImageAnimation {
                 ctx.arc(Pc.x, Pc.y, visualRadius, 0, Math.PI * 2);
                 ctx.stroke();
                 
-                // Vector
+                // Vector with white outline
+                ctx.beginPath();
+                ctx.moveTo(Pc.x, Pc.y);
+                ctx.lineTo(Ptip.x, Ptip.y);
+                // Draw white outline first
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 4.5; // Thicker white outline
+                ctx.stroke();
+                // Then draw the colored line on top
                 ctx.beginPath();
                 ctx.moveTo(Pc.x, Pc.y);
                 ctx.lineTo(Ptip.x, Ptip.y);
@@ -1127,10 +1148,82 @@ class FourierImageAnimation {
     }
     
     // Get interpolated coefficients between cursor and parametric modes
-    getInterpolatedCursorCoeffs(t, parametricCoeffs) {
+    getInterpolatedCursorCoeffs(t, parametricCoeffs, currentTime) {
         // t: 0 = parametric, 1 = cursor
-        if (t <= 0) return parametricCoeffs;
-        if (t >= 1) return this.cursorCoeffs;
+        // Use eased interpolation for smoother transitions
+        const easedT = this.easeInOut(t);
+        
+        // Sync phases with current parametric state to handle curve transitions
+        if (easedT <= 0) {
+            // Clear phase offsets when fully back to parametric
+            this.cursorPhaseOffsets = null;
+            this.cursorPhaseOffsetsTime = null;
+            this.lastParametricCoeffsHash = null;
+            return parametricCoeffs;
+        }
+        
+        if (easedT >= 1) {
+            // Create a simple hash of parametric coefficients to detect changes
+            const currentHash = parametricCoeffs.length + 
+                              (parametricCoeffs[0]?.freq || 0) + 
+                              (parametricCoeffs[0]?.amp || 0);
+            
+            // Only establish offsets once upon entering full cursor mode
+            const inCursorMode = this.cursorModeProgress > 0.95;
+            const haveOffsets = !!this.cursorPhaseOffsets;
+            
+            if (!haveOffsets && inCursorMode) {
+                // Calculate phase offsets based on current parametric state
+                this.cursorPhaseOffsets = new Map();
+                this.cursorPhaseOffsetsTime = currentTime;
+                this.lastParametricCoeffsHash = currentHash;
+                
+                this.cursorCoeffs.forEach(c => {
+                    const m = parametricCoeffs.find(p => p.freq === c.freq);
+                    if (m) {
+                        const pe = m.phase + m.freq * currentTime;
+                        const ce = c.phase + c.freq * currentTime;
+                        let d = pe - ce;
+                        while (d > Math.PI) d -= 2 * Math.PI;
+                        while (d < -Math.PI) d += 2 * Math.PI;
+                        this.cursorPhaseOffsets.set(c.freq, d);
+                    }
+                });
+            }
+            
+            // While fully in cursor mode, ignore parametric changes to avoid re-sync jumps
+            if (inCursorMode) {
+                // Don't recompute offsets if base curve changes underneath
+                // Fall through to apply existing offsets
+            } else {
+                // You're exiting back toward parametric — clear offsets once we're mostly out
+                if (this.cursorModeProgress < 0.05) {
+                    this.cursorPhaseOffsets = null;
+                    this.cursorPhaseOffsetsTime = null;
+                    this.lastParametricCoeffsHash = null;
+                }
+            }
+            
+            // Apply stored phase offsets to cursor coefficients
+            return this.cursorCoeffs.map(c => {
+                const phaseOffset = this.cursorPhaseOffsets.get(c.freq);
+                if (phaseOffset !== undefined) {
+                    const adjustedPhase = c.phase + phaseOffset;
+                    let normalizedPhase = adjustedPhase;
+                    while (normalizedPhase > Math.PI) normalizedPhase -= 2 * Math.PI;
+                    while (normalizedPhase < -Math.PI) normalizedPhase += 2 * Math.PI;
+                    
+                    return {
+                        freq: c.freq,
+                        re: c.amp * Math.cos(normalizedPhase),
+                        im: c.amp * Math.sin(normalizedPhase),
+                        amp: c.amp,
+                        phase: normalizedPhase
+                    };
+                }
+                return c;
+            });
+        }
         
         const interpolated = [];
         const cursorMap = new Map();
@@ -1148,50 +1241,65 @@ class FourierImageAnimation {
         this.cursorCoeffs.forEach(c => allFreqs.add(c.freq));
         parametricCoeffs.forEach(c => allFreqs.add(c.freq));
         
-        // Interpolate all frequencies
+        // Interpolate all frequencies using effective phase (phase + freq * time)
         allFreqs.forEach(freq => {
             const cursor = cursorMap.get(freq);
             const parametric = parametricMap.get(freq);
             
             if (cursor && parametric) {
                 // Both exist: interpolate smoothly
-                const amp = (1 - t) * parametric.amp + t * cursor.amp;
+                const amp = (1 - easedT) * parametric.amp + easedT * cursor.amp;
                 
-                // Interpolate phase taking shortest path around circle
-                let phaseDiff = cursor.phase - parametric.phase;
+                // Use effective phase (phase + freq * time) for continuity
+                // Always use current parametric state (not stored) to handle curve transitions
+                const parametricEffectivePhase = parametric.phase + freq * currentTime;
+                const cursorEffectivePhase = cursor.phase + freq * currentTime;
+                
+                // Interpolate effective phase taking shortest path
+                let phaseDiff = cursorEffectivePhase - parametricEffectivePhase;
                 while (phaseDiff > Math.PI) phaseDiff -= 2 * Math.PI;
                 while (phaseDiff < -Math.PI) phaseDiff += 2 * Math.PI;
-                const phase = parametric.phase + t * phaseDiff;
+                const effectivePhase = parametricEffectivePhase + easedT * phaseDiff;
+                
+                // Convert back to base phase
+                const phase = effectivePhase - freq * currentTime;
+                // Normalize phase
+                let normalizedPhase = phase;
+                while (normalizedPhase > Math.PI) normalizedPhase -= 2 * Math.PI;
+                while (normalizedPhase < -Math.PI) normalizedPhase += 2 * Math.PI;
                 
                 interpolated.push({
                     freq: freq,
-                    re: amp * Math.cos(phase),
-                    im: amp * Math.sin(phase),
+                    re: amp * Math.cos(normalizedPhase),
+                    im: amp * Math.sin(normalizedPhase),
                     amp: amp,
-                    phase: phase
+                    phase: normalizedPhase
                 });
             } else if (cursor) {
-                // Only in cursor: fade in
+                // Only in cursor: fade in smoothly
+                // Use cursor phase as-is (will be synced when fully in cursor mode)
+                const phase = cursor.phase;
+                
                 interpolated.push({
                     freq: freq,
-                    re: cursor.re * t,
-                    im: cursor.im * t,
-                    amp: cursor.amp * t,
-                    phase: cursor.phase
+                    re: cursor.amp * easedT * Math.cos(phase),
+                    im: cursor.amp * easedT * Math.sin(phase),
+                    amp: cursor.amp * easedT,
+                    phase: phase
                 });
             } else if (parametric) {
-                // Only in parametric: fade out
+                // Only in parametric: fade out smoothly
                 interpolated.push({
                     freq: freq,
-                    re: parametric.re * (1 - t),
-                    im: parametric.im * (1 - t),
-                    amp: parametric.amp * (1 - t),
+                    re: parametric.re * (1 - easedT),
+                    im: parametric.im * (1 - easedT),
+                    amp: parametric.amp * (1 - easedT),
                     phase: parametric.phase
                 });
             }
         });
         
-        // Sort by amplitude
+        // Sort by amplitude (cache this if needed for performance)
         interpolated.sort((a, b) => b.amp - a.amp);
         
         return interpolated;
@@ -1340,7 +1448,15 @@ class FourierImageAnimation {
             ctx.arc(Pc.x, Pc.y, visualRadius * s, 0, Math.PI * 2);
             ctx.stroke();
             
-            // Vector
+            // Vector with white outline
+            ctx.beginPath();
+            ctx.moveTo(Pc.x, Pc.y);
+            ctx.lineTo(Ptip.x, Ptip.y);
+            // Draw white outline first
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 4.5; // Thicker white outline
+            ctx.stroke();
+            // Then draw the colored line on top
             ctx.beginPath();
             ctx.moveTo(Pc.x, Pc.y);
             ctx.lineTo(Ptip.x, Ptip.y);
@@ -1393,7 +1509,15 @@ class FourierImageAnimation {
             ctx.arc(x, y, visualRadius, 0, Math.PI * 2);
             ctx.stroke();
             
-            // Vector line
+            // Vector line with white outline
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + vx, y + vy);
+            // Draw white outline first
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 4.5; // Thicker white outline
+            ctx.stroke();
+            // Then draw the colored line on top
             ctx.beginPath();
             ctx.moveTo(x, y);
             ctx.lineTo(x + vx, y + vy);
@@ -1417,10 +1541,18 @@ class FourierImageAnimation {
         
         // Use parametric path approach (if baseCoeffs exists)
         if (this.baseCoeffs) {
-            // Check if it's time to transition to a new curve
+            // Only allow new curve transitions when user is NOT following cursor
+            // This prevents animation restarts while following
+            const allowTransition = this.cursorModeProgress < 0.2;
             const now = Date.now();
-            if (now - this.lastCurveChange > this.curveChangeInterval && this.transitionProgress >= 1.0) {
-                this.transitionToNewCurve();
+            
+            if (allowTransition) {
+                if (now - this.lastCurveChange > this.curveChangeInterval && this.transitionProgress >= 1.0) {
+                    this.transitionToNewCurve();
+                    this.lastCurveChange = now;
+                }
+            } else {
+                // While following, keep the timer fresh so nothing fires immediately after
                 this.lastCurveChange = now;
             }
             
@@ -1452,29 +1584,55 @@ class FourierImageAnimation {
                 ctx.globalAlpha = 1;
             }
             
-            // Check if cursor has been inactive for too long (5 seconds)
+            // ---- Soft cursor engagement/decay ----
             const currentTime = Date.now();
-            if (this.isFollowingCursor && (currentTime - this.lastMouseMove) > this.cursorTimeout) {
-                this.isFollowingCursor = false;
-                // Don't snap target - let it smoothly return via interpolation below
+            const inactivity = currentTime - this.lastMouseMove;
+            
+            // Start fading out after this.cursorTimeout, finish after +fadeMs
+            const fadeMs = 2000; // 2s soft fade window
+            let softTarget = 0.0; // 0..1 desired cursor engagement
+            
+            if (this.cursorModeTarget) {
+                // Actively moving inside canvas -> fully engaged
+                softTarget = 1.0;
+            } else if (inactivity <= this.cursorTimeout) {
+                // Recently active -> hold engagement
+                softTarget = 1.0;
+            } else {
+                // Fade out smoothly after timeout
+                const u = Math.min(1, (inactivity - this.cursorTimeout) / fadeMs);
+                softTarget = 1.0 - this.easeInOut(u);
             }
             
+            // Drive progress directly from softTarget (no boolean hysteresis needed)
+            this.cursorModeProgress += (softTarget - this.cursorModeProgress) * this.cursorModeTransitionSpeed;
+            
+            // Use a single "isFollowingCursor" derived from progress to avoid flips
+            this.isFollowingCursor = this.cursorModeProgress > 0.12; // small threshold for visuals
+            
             // Smoothly move target towards center if not following cursor
-            if (!this.isFollowingCursor) {
+            if (!this.cursorModeTarget) {
                 // Gradually move target towards center
                 this.targetX += (this.centerX - this.targetX) * this.returnToCenterSpeed;
                 this.targetY += (this.centerY - this.targetY) * this.returnToCenterSpeed;
             }
             
-            // Smoothly transition cursor mode progress (0 = parametric, 1 = cursor)
-            const targetModeProgress = this.isFollowingCursor ? 1.0 : 0.0;
-            this.cursorModeProgress += (targetModeProgress - this.cursorModeProgress) * this.cursorModeTransitionSpeed;
+            // Spring-damper for smooth center return (no overshoot)
+            const spring = 30;   // stiffness
+            const damper = 2 * Math.sqrt(spring); // critical damping
+            const dt = 1 / 60;   // ~ per frame
             
-            // Smoothly update epicycle center position (follow cursor or return to center)
-            // Use slower smoothing for returning to center
-            const smoothing = this.isFollowingCursor ? this.cursorSmoothing : this.returnToCenterSpeed;
-            this.mouseX += (this.targetX - this.mouseX) * smoothing;
-            this.mouseY += (this.targetY - this.mouseY) * smoothing;
+            const tx = this.cursorModeProgress > 0.01 ? this.targetX : this.centerX;
+            const ty = this.cursorModeProgress > 0.01 ? this.targetY : this.centerY;
+            
+            let ax = spring * (tx - this.mouseX) - damper * this._vx;
+            let ay = spring * (ty - this.mouseY) - damper * this._vy;
+            
+            this._vx += ax * dt;
+            this._vy += ay * dt;
+            
+            this.mouseX += this._vx * dt;
+            this.mouseY += this._vy * dt;
             
             // Use the current epicycle center (either cursor position or screen center)
             const epicycleCenterX = this.mouseX;
@@ -1484,7 +1642,8 @@ class FourierImageAnimation {
             const currentParametricCoeffs = this.getInterpolatedCoeffs();
             
             // Smoothly interpolate between cursor and parametric coefficients
-            const interpolatedCoeffs = this.getInterpolatedCursorCoeffs(this.cursorModeProgress, currentParametricCoeffs);
+            // Pass current time to maintain phase continuity and prevent animation restart
+            const interpolatedCoeffs = this.getInterpolatedCursorCoeffs(this.cursorModeProgress, currentParametricCoeffs, this.time);
             const originalCoeffs = this.baseCoeffs;
             const originalMaxAmp = this.maxAmplitude;
             
