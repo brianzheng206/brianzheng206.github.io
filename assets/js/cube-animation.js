@@ -30,9 +30,12 @@ class FourierImageAnimation {
         this.coeffs = null;
         this.trail = [];
         this.trails = [[], [], [], []]; // Multiple trails for multiple epicycles
-        this.maxTrail = Math.floor(samplePoints * 0.4); // Shorter trails (40% of original)
+        this.maxTrail = Math.floor(samplePoints * 0.8); // Longer trails (80% of original)
         this.circleScale = 1.5; // Base visual multiplier for circle sizes (for display only)
         this.maxAmplitude = 1; // Will be updated when DFT is calculated
+        
+        // Ripple effects for canvas clicks
+        this.ripples = []; // Array of {x, y, radius, maxRadius, opacity, speed}
         
         // Cube rotation parameters
         this.cubeRotation = { A: 0, B: 0, C: 0 };
@@ -51,35 +54,6 @@ class FourierImageAnimation {
         // Phase offsets for multiple epicycles (in radians, relative to full cycle)
         this.epicycleOffsets = [0, Math.PI * 0.25, Math.PI * 0.5, Math.PI * 0.75];
         this.epicycleScales = [1.0, 0.6, 0.7, 0.5]; // Size multipliers for smaller epicycles
-        
-        // Cursor tracking for interactive epicycle center
-        this.mouseX = this.centerX;
-        this.mouseY = this.centerY;
-        this.targetX = this.centerX;
-        this.targetY = this.centerY;
-        this.isFollowingCursor = false;
-        this.cursorSmoothing = 0.30; // How fast to follow cursor (0-1, higher = faster)
-        this.returnToCenterSpeed = 0.10; // Slower speed for returning to center
-        this.lastMouseMove = Date.now();
-        this.cursorTimeout = 7000; // 7 seconds of inactivity before starting fade
-        this.cursorModeProgress = 0.0; // 0 = parametric, 1 = cursor (for smooth transition)
-        this.cursorModeTransitionSpeed = 0.005; // Slower blend for smoother transitions
-        
-        // Soft cursor engagement/decay (no hard boolean flips)
-        this.cursorModeTarget = false; // Target state (smoothly transitions)
-        
-        // Spring-damper for smooth center return
-        this._vx = 0; // Velocity X
-        this._vy = 0; // Velocity Y
-        
-        // Phase synchronization to prevent animation restart
-        // Store phase offsets when entering cursor mode, then apply continuously
-        this.cursorPhaseOffsets = null; // Map of freq -> phase offset
-        this.cursorPhaseOffsetsTime = null; // Time when offsets were calculated
-        this.lastParametricCoeffsHash = null; // Hash to detect coefficient changes
-        
-        // Generate simple Fourier pattern for cursor following (circle-like)
-        this.cursorCoeffs = this.generateSimpleFourierPattern();
         
         // Generate random parametric path and compute DFT once
         if (!svgPath && !imageSrc) {
@@ -123,114 +97,101 @@ class FourierImageAnimation {
             this.canvas.height = this.height;
             this.centerX = this.width / 2;
             this.centerY = this.height / 2;
-            // If not following cursor, target will smoothly move to new center
-            // If following cursor, keep current target position (will adjust smoothly)
         });
         
-        // Mouse tracking for cursor following
-        this.setupMouseTracking();
+        // Setup canvas click ripples
+        this.setupCanvasRipples();
     }
     
-    setupMouseTracking() {
-        // Track mouse movement globally
-        document.addEventListener('mousemove', (e) => {
-            const target = e.target;
-            
-            // Check if cursor is over interactive elements (buttons, links, inputs, etc.)
-            const isOverInteractive = target.tagName === 'BUTTON' || 
-                                     target.tagName === 'A' || 
-                                     target.tagName === 'INPUT' ||
-                                     target.tagName === 'SELECT' ||
-                                     target.tagName === 'TEXTAREA' ||
-                                     target.closest('button') || 
-                                     target.closest('a') ||
-                                     target.closest('input') ||
-                                     target.closest('.btn') ||
-                                     target.closest('.hero-content') ||
-                                     target.closest('.hero-text') ||
-                                     target.closest('nav') ||
-                                     target.closest('.scroll-indicator');
-            
-            // If over interactive element, stop following (target will smoothly return to center)
-            if (isOverInteractive && target !== this.canvas && !this.canvas.contains(target)) {
-                this.isFollowingCursor = false;
-                return;
-            }
-            
-            // Check if cursor is over the canvas
+    setupCanvasRipples() {
+        // Add click listener to canvas
+        this.canvas.addEventListener('click', (e) => {
+            // Get click position relative to canvas
             const rect = this.canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
-            // Check if cursor position is within canvas bounds
-            const isOverCanvasBounds = x >= 0 && x <= this.width && y >= 0 && y <= this.height;
+            // Create ripple effect at click position
+            this.createRipple(x, y);
+        });
+    }
+    
+    createRipple(x, y) {
+        // Create multiple ripples in a wave pattern
+        const maxRadius = Math.max(this.width, this.height) * 0.8; // Ripple expands to 80% of screen
+        const speed = maxRadius / 120; // Slower: takes about 120 frames to complete
+        const numRipples = 3; // Number of ripples in the wave
+        const delayBetweenRipples = 15; // Frames between each ripple
+        
+        for (let i = 0; i < numRipples; i++) {
+            this.ripples.push({
+                x: x,
+                y: y,
+                radius: -delayBetweenRipples * i * speed, // Start with negative radius for delay
+                maxRadius: maxRadius,
+                opacity: 0.7,
+                speed: speed,
+                decay: 0.98 // Exponential decay factor
+            });
+        }
+    }
+    
+    updateAndDrawRipples(ctx) {
+        // Update and draw all active ripples
+        for (let i = this.ripples.length - 1; i >= 0; i--) {
+            const ripple = this.ripples[i];
             
-            if (isOverCanvasBounds) {
-                // Check what element is actually at this point (handles z-index stacking)
-                const elementAtPoint = document.elementFromPoint(e.clientX, e.clientY);
+            // Only update if ripple has started (radius >= 0)
+            if (ripple.radius >= 0) {
+                // Update ripple
+                ripple.radius += ripple.speed;
                 
-                // Only follow if the canvas or its child is the topmost element
-                // (not if buttons/text are on top)
-                if (elementAtPoint === this.canvas || 
-                    this.canvas.contains(elementAtPoint) ||
-                    elementAtPoint === null) {
-                    // But check if it's actually an interactive element
-                    const isInteractiveAtPoint = elementAtPoint && (
-                        elementAtPoint.tagName === 'BUTTON' ||
-                        elementAtPoint.tagName === 'A' ||
-                        elementAtPoint.closest('button') ||
-                        elementAtPoint.closest('a') ||
-                        elementAtPoint.closest('.btn') ||
-                        elementAtPoint.closest('.hero-content') ||
-                        elementAtPoint.closest('.hero-text')
-                    );
+                // Apply exponential decay to opacity
+                ripple.opacity *= ripple.decay;
+                
+                // Calculate additional fade based on progress (for smoother fade-out)
+                const progress = Math.min(1, ripple.radius / ripple.maxRadius);
+                const progressFade = 1 - progress;
+                
+                // Combined opacity with decay and progress fade
+                const finalOpacity = ripple.opacity * progressFade;
+                
+                // Draw ripple
+                if (ripple.radius < ripple.maxRadius && finalOpacity > 0.01) {
+                    ctx.strokeStyle = this.hexToRgba(this.colors[0], finalOpacity);
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(ripple.x, ripple.y, ripple.radius, 0, Math.PI * 2);
+                    ctx.stroke();
                     
-                    if (!isInteractiveAtPoint) {
-                        // Smoothly update target to cursor position (prevents jerks from fast movement)
-                        const cursorSmooth = 0.3; // How fast to follow cursor (higher = snappier)
-                        this.targetX += (x - this.targetX) * cursorSmooth;
-                        this.targetY += (y - this.targetY) * cursorSmooth;
-                        this.cursorModeTarget = true; // Set target (will transition smoothly)
-                        this.lastMouseMove = Date.now(); // Update last movement time
-                    } else {
-                        // Stop following (target will smoothly return to center)
-                        this.cursorModeTarget = false;
+                    // Draw additional inner rings for more visual interest
+                    if (ripple.radius > 30) {
+                        const innerRadius = ripple.radius * 0.75;
+                        ctx.strokeStyle = this.hexToRgba(this.colors[1], finalOpacity * 0.6);
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(ripple.x, ripple.y, innerRadius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // Draw even smaller inner ring
+                        if (ripple.radius > 60) {
+                            const innerRadius2 = ripple.radius * 0.5;
+                            ctx.strokeStyle = this.hexToRgba(this.colors[2], finalOpacity * 0.4);
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.arc(ripple.x, ripple.y, innerRadius2, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
                     }
                 } else {
-                    // Other element is on top, stop following (target will smoothly return)
-                    this.cursorModeTarget = false;
+                    // Remove completed ripples
+                    this.ripples.splice(i, 1);
                 }
             } else {
-                // Not over canvas, stop following (target will smoothly return)
-                this.cursorModeTarget = false;
+                // Ripple hasn't started yet, just increment radius
+                ripple.radius += ripple.speed;
             }
-        });
-        
-        // Stop following when mouse leaves canvas (target will smoothly return)
-        this.canvas.addEventListener('mouseleave', () => {
-            this.cursorModeTarget = false;
-        });
-        
-        // Stop following on scroll (target will smoothly return)
-        window.addEventListener('scroll', () => {
-            this.cursorModeTarget = false;
-        }, { passive: true });
-        
-        // Also handle touch events for mobile (optional)
-        this.canvas.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) {
-                const rect = this.canvas.getBoundingClientRect();
-                const touch = e.touches[0];
-                const x = touch.clientX - rect.left;
-                const y = touch.clientY - rect.top;
-                
-                if (x >= 0 && x <= this.width && y >= 0 && y <= this.height) {
-                    this.targetX = x;
-                    this.targetY = y;
-                    this.isFollowingCursor = true;
-                }
-            }
-        }, { passive: true });
+        }
     }
     
     // Sample SVG path
@@ -1077,7 +1038,7 @@ class FourierImageAnimation {
     
     // Draw epicycles centered at a point with uniform scaling (smooth and stable)
     // Returns the final point position
-    drawEpicyclesCentered(t, centerX, centerY, scale, showCircles = true, opacity = 0.35) {
+    drawEpicyclesCentered(t, centerX, centerY, scale, showCircles = true, opacity = 0.35, firstTipOverride = null) {
         const ctx = this.ctx;
         let x = 0, y = 0; // start at origin in canonical space
         ctx.globalAlpha = opacity;
@@ -1106,7 +1067,14 @@ class FourierImageAnimation {
             
             // Transform to canvas space (just scale and translate)
             const Pc = { x: centerX + x * scale, y: centerY + y * scale };
-            const Ptip = { x: centerX + (x + vx) * scale, y: centerY + (y + vy) * scale };
+            
+            // For the first epicycle, use override tip if provided (for cursor following)
+            let Ptip;
+            if (i === 0 && firstTipOverride !== null) {
+                Ptip = firstTipOverride;
+            } else {
+                Ptip = { x: centerX + (x + vx) * scale, y: centerY + (y + vy) * scale };
+            }
             
             if (showCircles) {
                 // Circle
@@ -1134,8 +1102,17 @@ class FourierImageAnimation {
             }
             
             // Advance in canonical space
-            x += vx;
-            y += vy;
+            // If first tip was overridden, calculate the actual vector for chain continuity
+            if (i === 0 && firstTipOverride !== null) {
+                // Calculate the actual offset from center to override tip
+                const actualVx = (firstTipOverride.x - centerX) / scale;
+                const actualVy = (firstTipOverride.y - centerY) / scale;
+                x += actualVx;
+                y += actualVy;
+            } else {
+                x += vx;
+                y += vy;
+            }
         }
         
         ctx.globalAlpha = 1;
@@ -1539,6 +1516,9 @@ class FourierImageAnimation {
         ctx.fillStyle = this.bgColor;
         ctx.fillRect(0, 0, this.width, this.height);
         
+        // Update and draw ripples
+        this.updateAndDrawRipples(ctx);
+        
         // Use parametric path approach (if baseCoeffs exists)
         if (this.baseCoeffs) {
             // Only allow new curve transitions when user is NOT following cursor
@@ -1584,81 +1564,24 @@ class FourierImageAnimation {
                 ctx.globalAlpha = 1;
             }
             
-            // ---- Soft cursor engagement/decay ----
-            const currentTime = Date.now();
-            const inactivity = currentTime - this.lastMouseMove;
-            
-            // Start fading out after this.cursorTimeout, finish after +fadeMs
-            const fadeMs = 2000; // 2s soft fade window
-            let softTarget = 0.0; // 0..1 desired cursor engagement
-            
-            if (this.cursorModeTarget) {
-                // Actively moving inside canvas -> fully engaged
-                softTarget = 1.0;
-            } else if (inactivity <= this.cursorTimeout) {
-                // Recently active -> hold engagement
-                softTarget = 1.0;
-            } else {
-                // Fade out smoothly after timeout
-                const u = Math.min(1, (inactivity - this.cursorTimeout) / fadeMs);
-                softTarget = 1.0 - this.easeInOut(u);
-            }
-            
-            // Drive progress directly from softTarget (no boolean hysteresis needed)
-            this.cursorModeProgress += (softTarget - this.cursorModeProgress) * this.cursorModeTransitionSpeed;
-            
-            // Use a single "isFollowingCursor" derived from progress to avoid flips
-            this.isFollowingCursor = this.cursorModeProgress > 0.12; // small threshold for visuals
-            
-            // Smoothly move target towards center if not following cursor
-            if (!this.cursorModeTarget) {
-                // Gradually move target towards center
-                this.targetX += (this.centerX - this.targetX) * this.returnToCenterSpeed;
-                this.targetY += (this.centerY - this.targetY) * this.returnToCenterSpeed;
-            }
-            
-            // Spring-damper for smooth center return (no overshoot)
-            const spring = 30;   // stiffness
-            const damper = 2 * Math.sqrt(spring); // critical damping
-            const dt = 1 / 60;   // ~ per frame
-            
-            const tx = this.cursorModeProgress > 0.01 ? this.targetX : this.centerX;
-            const ty = this.cursorModeProgress > 0.01 ? this.targetY : this.centerY;
-            
-            let ax = spring * (tx - this.mouseX) - damper * this._vx;
-            let ay = spring * (ty - this.mouseY) - damper * this._vy;
-            
-            this._vx += ax * dt;
-            this._vy += ay * dt;
-            
-            this.mouseX += this._vx * dt;
-            this.mouseY += this._vy * dt;
-            
-            // Use the current epicycle center (either cursor position or screen center)
-            const epicycleCenterX = this.mouseX;
-            const epicycleCenterY = this.mouseY;
+            // Main animation: Always draw epicycles from screen center, following parametric path only
+            const epicycleCenterX = this.centerX;
+            const epicycleCenterY = this.centerY;
             
             // Get current parametric coefficients (may be interpolated if transitioning between curves)
             const currentParametricCoeffs = this.getInterpolatedCoeffs();
-            
-            // Smoothly interpolate between cursor and parametric coefficients
-            // Pass current time to maintain phase continuity and prevent animation restart
-            const interpolatedCoeffs = this.getInterpolatedCursorCoeffs(this.cursorModeProgress, currentParametricCoeffs, this.time);
             const originalCoeffs = this.baseCoeffs;
             const originalMaxAmp = this.maxAmplitude;
             
-            // Temporarily swap coefficients for drawing
-            this.baseCoeffs = interpolatedCoeffs;
+            // Use parametric coefficients only (no cursor interpolation for main animation)
+            this.baseCoeffs = currentParametricCoeffs;
             
-            // Interpolate max amplitude
-            const cursorMaxAmp = this.cursorCoeffs.length > 0 ? 
-                Math.max(...this.cursorCoeffs.map(c => c.amp)) : 1;
+            // Use parametric max amplitude
             const parametricMaxAmp = currentParametricCoeffs.length > 0 ? 
                 Math.max(...currentParametricCoeffs.map(c => c.amp)) : 1;
-            this.maxAmplitude = (1 - this.cursorModeProgress) * parametricMaxAmp + 
-                               this.cursorModeProgress * cursorMaxAmp;
+            this.maxAmplitude = parametricMaxAmp;
             
-            // Draw 4 epicycles (1 main + 3 smaller ones) with different phase offsets
+            // Draw main animation epicycles (1 main + 3 smaller ones) with different phase offsets
             const points = [];
             for (let e = 0; e < 3; e++) {
                 const offset = this.epicycleOffsets[e];
@@ -1671,6 +1594,7 @@ class FourierImageAnimation {
                 const showCircles = (e === 0);
                 const opacity = e === 0 ? 0.40 : 0.2;
                 
+                // Draw epicycles normally (no cursor override for main animation)
                 const p = this.drawEpicyclesCentered(tOffset, epicycleCenterX, epicycleCenterY, scale, showCircles, opacity);
                 
                 // Smooth the point during transition to prevent jitter
@@ -1693,7 +1617,7 @@ class FourierImageAnimation {
             this.baseCoeffs = originalCoeffs;
             this.maxAmplitude = originalMaxAmp;
             
-            // Draw trails for all epicycles
+            // Draw trails for all epicycles (main animation)
             for (let e = 0; e < 4; e++) {
                 const trail = this.trails[e];
                 if (trail.length > 1) {
@@ -1724,8 +1648,8 @@ class FourierImageAnimation {
                     const baseOpacity = e === 0 ? 0.9 : 0.6;
                     for (let i = 0; i <= 10; i++) {
                         const t = i / 10;
-                        // Faster fade: goes from 1.0 to 0.0 more quickly (was 0.85, now 1.2 for steeper fade)
-                        const a = Math.max(0, (1 - t * 1.2)) * baseOpacity;
+                        // Slower fade: goes from 1.0 to 0.0 more gradually (0.6 instead of 1.2)
+                        const a = Math.max(0, (1 - t * 0.6)) * baseOpacity;
                         grad.addColorStop(t, this.hexToRgba(this.colors[2], a));
                     }
                     ctx.strokeStyle = grad;
@@ -1777,7 +1701,7 @@ class FourierImageAnimation {
                 const grad = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
                 for (let i = 0; i <= 10; i++) {
                     const t = i / 10;
-                    const a = Math.max(0, 1 - t * 1.2); // Faster fade
+                    const a = Math.max(0, 1 - t * 0.6); // Slower fade
                     grad.addColorStop(t, this.hexToRgba(this.colors[2], a));
                 }
                 ctx.strokeStyle = grad;
