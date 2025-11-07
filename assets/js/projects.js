@@ -11,11 +11,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const carouselRight = document.getElementById('carouselRight');
     
     // Carousel navigation
+    let updateArrowStates = null;
+    
     if (projectsCarousel && carouselLeft && carouselRight) {
         const scrollAmount = 500; // Pixels to scroll per click
         
         // Update arrow states and slider based on scroll position
-        const updateArrowStates = () => {
+        updateArrowStates = () => {
             const { scrollLeft, scrollWidth, clientWidth } = projectsCarousel;
             const maxScroll = scrollWidth - clientWidth;
             const scrollPercentage = maxScroll > 0 ? (scrollLeft / maxScroll) : 0;
@@ -192,20 +194,103 @@ document.addEventListener('DOMContentLoaded', function() {
         card.style.transform = 'translateY(0)';
     });
     
-    // Project card hover effects (enhanced)
-    projectCards.forEach(card => {
-        const overlay = card.querySelector('.project-overlay');
-        const image = card.querySelector('.project-image img');
-        
-        if (overlay && image) {
-            card.addEventListener('mouseenter', function() {
-                // Additional hover effects can be added here
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                // Reset effects
-            });
+    // Project card modal popup functionality
+    let currentModal = null;
+    
+    // Create modal overlay structure
+    function createModal() {
+        const overlay = document.createElement('div');
+        overlay.className = 'project-modal-overlay';
+        overlay.innerHTML = `
+            <div class="project-modal-content">
+                <button class="project-modal-close" aria-label="Close modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        return overlay;
+    }
+    
+    // Open modal with project card content
+    function openProjectModal(card) {
+        // Remove existing modal if any
+        const existingModal = document.querySelector('.project-modal-overlay');
+        if (existingModal) {
+            existingModal.remove();
         }
+        
+        // Create new modal overlay
+        const modalOverlay = createModal();
+        const modalContent = modalOverlay.querySelector('.project-modal-content');
+        const closeBtn = modalOverlay.querySelector('.project-modal-close');
+        
+        // Clone the card content
+        const cardClone = card.cloneNode(true);
+        cardClone.style.width = '100%';
+        cardClone.style.maxWidth = 'none';
+        cardClone.style.cursor = 'default';
+        
+        // Add cloned card to modal (close button is already in modalContent)
+        modalContent.appendChild(cardClone);
+        
+        // Trigger animation with a small delay to ensure DOM is ready
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+                modalOverlay.classList.add('active');
+            });
+        }, 10);
+        
+        currentModal = modalOverlay;
+        
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+        
+        // Close button handler
+        closeBtn.addEventListener('click', closeProjectModal);
+        
+        // Close on backdrop click
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                closeProjectModal();
+            }
+        });
+        
+        // Close on Escape key
+        const escapeHandler = function(e) {
+            if (e.key === 'Escape' && currentModal) {
+                closeProjectModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    }
+    
+    // Close modal
+    function closeProjectModal() {
+        if (currentModal) {
+            currentModal.classList.remove('active');
+            setTimeout(() => {
+                if (currentModal && currentModal.parentNode) {
+                    currentModal.parentNode.removeChild(currentModal);
+                }
+                currentModal = null;
+                document.body.style.overflow = '';
+            }, 500); // Wait for animation to complete (increased for smoother exit)
+        }
+    }
+    
+    // Add click handlers to project cards
+    projectCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't open modal if clicking on links
+            if (e.target.closest('.project-link') || e.target.closest('.project-overlay')) {
+                return;
+            }
+            
+            // Open modal with this card's content
+            openProjectModal(card);
+        });
     });
     
     // Lazy load project images
