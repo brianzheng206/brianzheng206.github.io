@@ -51,6 +51,7 @@ class FourierImageAnimation {
         this.lastCurveChange = Date.now(); // When last transition completed (or animation started)
         this.transitionDuration = 3000; // 3 seconds for full transition (in ms)
         this.transitionStartTime = null; // Track when current transition started (null if no transition active)
+        this.transitionStartAnimationTime = null; // Freeze animation time at transition start to prevent jitter
         this.lastPathType = undefined; // Track last path type to ensure variety
         this.currentShapeType = undefined; // Track manually selected shape (undefined = auto mode)
         
@@ -597,6 +598,7 @@ class FourierImageAnimation {
         // Reset transition state and start transition
         this.transitionProgress = 0;
         this.transitionStartTime = Date.now();
+        this.transitionStartAnimationTime = this.time; // Freeze animation time to prevent jitter
         
         // Reset the automatic curve change timer so it doesn't interfere
         this.lastCurveChange = Date.now();
@@ -1172,7 +1174,7 @@ class FourierImageAnimation {
             const normalizedAmp = this.maxAmplitude > 0 ? c.amp / this.maxAmplitude : 0;
             const scaleFactor = 3.0 - (normalizedAmp * 1.5);
             // Progressive size reduction: rings become smaller as we go down the chain
-            const progressiveScale = Math.pow(0.88, i); // Each ring is 88% of the previous one
+            const progressiveScale = Math.pow(0.82, i); // Each ring is 82% of the previous one (faster decay)
             const visualRadius = c.amp * scaleFactor * scale * progressiveScale;
             
             // Transform to canvas space (just scale and translate)
@@ -1497,6 +1499,7 @@ class FourierImageAnimation {
         // Start transition - reset progress and update lastCurveChange
         this.transitionProgress = 0.0;
         this.transitionStartTime = Date.now(); // Track when transition actually started
+        this.transitionStartAnimationTime = this.time; // Freeze animation time to prevent jitter
         this.baseCoeffs = newCoeffs;
         console.log('Transition started, progress:', this.transitionProgress, 'startTime:', this.transitionStartTime);
         // Don't update maxAmplitude immediately - let it interpolate
@@ -1527,7 +1530,7 @@ class FourierImageAnimation {
             const normalizedAmp = this.maxAmplitude > 0 ? c.amp / this.maxAmplitude : 0;
             const scaleFactor = 3.0 - (normalizedAmp * 1.5);
             // Progressive size reduction: rings become smaller as we go down the chain
-            const progressiveScale = Math.pow(0.88, i); // Each ring is 88% of the previous one
+            const progressiveScale = Math.pow(0.82, i); // Each ring is 82% of the previous one (faster decay)
             const visualRadius = c.amp * scaleFactor * progressiveScale;
             
             // Current center in canvas space
@@ -1596,7 +1599,7 @@ class FourierImageAnimation {
             // Inverse scaling: small amps (0.1) get 3x, large amps (1.0) get 1.5x
             const scaleFactor = 3.0 - (normalizedAmp * 1.5);
             // Progressive size reduction: rings become smaller as we go down the chain
-            const progressiveScale = Math.pow(0.88, i); // Each ring is 88% of the previous one
+            const progressiveScale = Math.pow(0.82, i); // Each ring is 82% of the previous one (faster decay)
             const visualRadius = c.amp * scaleFactor * progressiveScale;
             
             ctx.beginPath();
@@ -1680,18 +1683,109 @@ class FourierImageAnimation {
                 this.maxAmplitude = (1 - t) * prevMaxAmp + t * newMaxAmp;
             }
             
-            // Draw interpolated target path (ghost outline)
+            // Draw interpolated target path (ghost outline) - fade in during transitions
             if (this.parametricPath && this.parametricPath.length > 1) {
-                ctx.globalAlpha = 0.2 * (1 - this.transitionProgress * 0.5);
+                // Fade in the ghost outline as transition progresses
+                const ghostAlpha = this.transitionProgress < 1.0 
+                    ? 0.15 + (this.transitionProgress * 0.25) // Fade from 0.15 to 0.4
+                    : 0.2; // Back to subtle after transition
+                
+                ctx.globalAlpha = ghostAlpha;
                 ctx.beginPath();
                 ctx.moveTo(this.parametricPath[0].x, this.parametricPath[0].y);
                 for (let i = 1; i < this.parametricPath.length; i++) {
                     ctx.lineTo(this.parametricPath[i].x, this.parametricPath[i].y);
                 }
-                ctx.strokeStyle = this.hexToRgba(this.colors[2], 0.2);
+                ctx.strokeStyle = this.hexToRgba(this.colors[2], ghostAlpha);
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
                 ctx.globalAlpha = 1;
+            }
+            
+            // During transitions, show smooth interpolation between patterns but don't trace
+            if (this.transitionProgress < 1.0) {
+                // Draw existing trails fading out as transition progresses
+                const fadeAlpha = 1.0 - this.transitionProgress;
+                for (let e = 0; e < 4; e++) {
+                    const trail = this.trails[e];
+                    if (trail.length > 1) {
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        ctx.lineWidth = e === 0 ? 2.5 : 1.5;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(trail[0].x, trail[0].y);
+                        
+                        for (let i = 1; i < trail.length; i++) {
+                            const pt = trail[i];
+                            if (i === 1) {
+                                ctx.lineTo(pt.x, pt.y);
+                            } else if (i < trail.length - 1) {
+                                const nxt = trail[i + 1];
+                                ctx.quadraticCurveTo(pt.x, pt.y, (pt.x + nxt.x) / 2, (pt.y + nxt.y) / 2);
+                            } else {
+                                ctx.lineTo(pt.x, pt.y);
+                            }
+                        }
+                        
+                        const start = trail[0];
+                        const end = trail[trail.length - 1];
+                        const grad = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
+                        const baseOpacity = e === 0 ? 0.9 : 0.6;
+                        for (let i = 0; i <= 10; i++) {
+                            const t = i / 10;
+                            const a = Math.max(0, (1 - t * 0.6)) * baseOpacity * fadeAlpha;
+                            grad.addColorStop(t, this.hexToRgba(this.colors[2], a));
+                        }
+                        ctx.strokeStyle = grad;
+                        ctx.stroke();
+                    }
+                }
+                
+                // Draw interpolated epicycles (smooth morph from old to new pattern)
+                // Use interpolated coefficients to show smooth transition
+                const epicycleCenterX = this.centerX;
+                const epicycleCenterY = this.centerY;
+                const currentParametricCoeffs = this.getInterpolatedCoeffs();
+                const parametricMaxAmp = currentParametricCoeffs.length > 0 ? 
+                    Math.max(...currentParametricCoeffs.map(c => c.amp)) : 1;
+                
+                // Temporarily set max amplitude for proper scaling
+                const savedMaxAmp = this.maxAmplitude;
+                this.maxAmplitude = parametricMaxAmp;
+                
+                // Draw epicycles with interpolated coefficients (smooth morph)
+                // Keep them visible during transition (don't fade out)
+                for (let e = 0; e < 3; e++) {
+                    const offset = this.epicycleOffsets[e];
+                    const scale = this.epicycleScales[e];
+                    const tOffset = this.time + offset * (this.samplePoints / (2 * Math.PI)) * this.speed;
+                    const showCircles = (e === 0);
+                    const opacity = e === 0 ? 0.40 : 0.2; // Full opacity - keep visible during morph
+                    
+                    // Draw interpolated epicycles (smoothly morphing from old to new)
+                    this.drawEpicyclesCentered(tOffset, epicycleCenterX, epicycleCenterY, scale, showCircles, opacity, null, currentParametricCoeffs);
+                }
+                
+                // Restore max amplitude
+                this.maxAmplitude = savedMaxAmp;
+                
+                // Don't add new points to trails during transition
+                ctx.globalAlpha = 1;
+                this.time += this.speed;
+                requestAnimationFrame(() => this.animate());
+                return;
+            }
+            
+            // When transition completes, clear trails to start fresh with new pattern
+            if (this.transitionProgress >= 1.0 && this.prevCoeffs) {
+                // Clear all trails when starting the new pattern
+                for (let e = 0; e < 4; e++) {
+                    this.trails[e] = [];
+                }
+                this.trail = [];
+                this.prevCoeffs = null; // Clear transition state
+                this.transitionStartAnimationTime = null; // Clear frozen time
             }
             
             // Main animation: Always draw epicycles from screen center, following parametric path only

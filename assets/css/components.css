@@ -1305,17 +1305,18 @@
     }
     
     .projects-carousel {
-        flex-direction: column;
-        overflow-x: visible;
-        overflow-y: visible;
+        flex-direction: column !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
         gap: var(--spacing-lg);
         padding: 0;
         width: 100%;
+        display: flex;
     }
     
     .project-card {
-        width: 100%;
-        max-width: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
         min-width: 0;
         flex: 0 0 auto;
     }
@@ -1330,10 +1331,22 @@
     
     .project-title {
         font-size: var(--font-size-xl);
+        margin-bottom: var(--spacing-sm);
     }
     
     .project-description {
         font-size: var(--font-size-sm);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .project-tech {
+        gap: var(--spacing-xs);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .tech-badge {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-xs) var(--spacing-sm);
     }
     
     .project-filters {
