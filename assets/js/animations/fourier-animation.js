@@ -1,7 +1,7 @@
 /**
- * Fourier Epicycle Animation
- * Traces SVG paths or images using rotating circles (epicycles)
- * Demonstrates Fourier series decomposition
+ * Fourier Series Animation
+ * Interactive Fourier epicycle visualization with shape morphing
+ * Demonstrates Fourier series decomposition using rotating circles (epicycles)
  */
 
 class FourierImageAnimation {

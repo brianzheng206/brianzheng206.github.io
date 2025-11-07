@@ -147,7 +147,7 @@
                 </button>
                 <div class="projects-carousel" id="projectsGrid">
                 <!-- Autonomous Drone Project -->
-                <article class="project-card" data-category="robotics ai">
+                <article class="project-card" data-category="robotics">
                     <div class="project-image">
                         <img src="assets/images/projects/autonomous-drone.jpg" alt="End-to-End Autonomous Drone">
                         <div class="project-overlay">
@@ -220,7 +220,7 @@
                 </article>
 
                 <!-- 6-DOF Robotic Arm Project -->
-                <article class="project-card" data-category="robotics frontend">
+                <article class="project-card" data-category="robotics">
                     <div class="project-image">
                         <img src="assets/images/projects/robotic-arm.jpg" alt="6-DOF CV Robotic Arm">
                         <div class="project-overlay">
@@ -257,7 +257,7 @@
                 <!-- ASCII Cube Matrix Visualization -->
                 <article class="project-card" data-category="frontend" data-iframe="ascii-cube-matrix.html">
                     <div class="project-image">
-                        <img src="assets/images/projects/ascii-cube.jpg" alt="ASCII Cube Matrix">
+                        <img src="assets/images/projects/ascii_cube.png" alt="ASCII Cube Matrix">
                         <div class="project-overlay">
                             <div class="project-links">
                                 <a href="ascii-cube-matrix.html" class="project-link" target="_blank" aria-label="Open"><i class="fas fa-external-link-alt"></i></a>
@@ -738,11 +738,17 @@
     </button>
 
     <!-- Scripts -->
+    <!-- Utility libraries (must load first) -->
+    <script src="assets/js/utils/3d-utils.js"></script>
+    <script src="assets/js/utils/fourier-math.js"></script>
+    <!-- Main scripts -->
     <script src="assets/js/main.js"></script>
     <script src="assets/js/navigation.js"></script>
     <script src="assets/js/projects.js"></script>
     <script src="assets/js/contact.js"></script>
-    <script src="assets/js/cube-animation.js"></script>
+    <!-- Animation scripts -->
+    <script src="assets/js/animations/fourier-animation.js"></script>
+    <script src="assets/js/animations/nav-cube-animation.js"></script>
 </body>
 </html>
 

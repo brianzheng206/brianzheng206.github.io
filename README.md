@@ -20,7 +20,12 @@ brianzheng-website/
 │   │   ├── navigation.js        # Navigation and scroll behavior
 │   │   ├── projects.js          # Project filtering and modal functionality
 │   │   ├── contact.js           # Contact form handling
-│   │   └── cube-animation.js    # Fourier series animation logic
+│   │   ├── utils/               # Shared utility functions
+│   │   │   ├── 3d-utils.js      # 3D rotation and projection utilities
+│   │   │   └── fourier-math.js  # DFT, resampling, and geometric algorithms
+│   │   └── animations/          # Animation classes
+│   │       ├── fourier-animation.js  # Fourier series epicycle animation
+│   │       └── nav-cube-animation.js # Navigation bar cube animation
 │   ├── images/
 │   │   ├── profile/             # Profile photos
 │   │   ├── projects/            # Project screenshots/demos
@@ -54,7 +59,10 @@ brianzheng-website/
 - **navigation.js**: Smooth scrolling, active section highlighting, mobile menu
 - **projects.js**: Project filtering, carousel navigation, modal popups
 - **contact.js**: Contact form validation and submission
-- **cube-animation.js**: Fourier series animation class and shape generation
+- **utils/3d-utils.js**: Shared 3D rotation and projection functions
+- **utils/fourier-math.js**: DFT computation, point resampling, convex hull algorithms
+- **animations/fourier-animation.js**: Fourier series epicycle animation with shape morphing
+- **animations/nav-cube-animation.js**: Navigation bar rotating cube animation
 
 ## 🛠️ Technologies
 

@@ -74,7 +74,11 @@
         <p class="click-hint">Click anywhere to create ripples</p>
     </div>
 
-    <script src="assets/js/cube-animation.js"></script>
+    <!-- Utility libraries (must load first) -->
+    <script src="assets/js/utils/3d-utils.js"></script>
+    <script src="assets/js/utils/fourier-math.js"></script>
+    <!-- Animation script -->
+    <script src="assets/js/animations/fourier-animation.js"></script>
     <script>
         // Initialize the visualization
         document.addEventListener('DOMContentLoaded', function() {
