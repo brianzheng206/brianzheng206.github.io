@@ -140,8 +140,12 @@
                 <button class="filter-btn" data-filter="hardware">Hardware</button>
             </div>
 
-            <!-- Projects Grid -->
-            <div class="projects-grid" id="projectsGrid">
+            <!-- Projects Carousel -->
+            <div class="projects-carousel-wrapper">
+                <button class="carousel-arrow carousel-arrow-left" id="carouselLeft" aria-label="Scroll left">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="projects-carousel" id="projectsGrid">
                 <!-- Autonomous Drone Project -->
                 <article class="project-card" data-category="robotics ai">
                     <div class="project-image">
@@ -249,6 +253,16 @@
                         </div>
                     </div>
                 </article>
+                </div>
+                <button class="carousel-arrow carousel-arrow-right" id="carouselRight" aria-label="Scroll right">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            <!-- Carousel Slider Indicator -->
+            <div class="carousel-slider-container">
+                <div class="carousel-slider-track">
+                    <div class="carousel-slider-thumb" id="carouselSliderThumb"></div>
+                </div>
             </div>
         </div>
     </section>

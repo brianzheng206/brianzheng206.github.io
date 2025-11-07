@@ -151,8 +151,41 @@ img {
     padding: 0 var(--spacing-lg);
 }
 
+#projects .container {
+    max-width: 1600px;
+}
+
 section {
     padding: var(--spacing-3xl) 0;
+}
+
+/* Distinct section backgrounds for visual separation */
+#projects {
+    background-color: rgba(55, 44, 41, 0.4);
+}
+
+#achievements {
+    background-color: rgba(75, 63, 58, 0.5);
+}
+
+#skills {
+    background-color: rgba(61, 51, 45, 0.4);
+}
+
+#resume {
+    background-color: rgba(55, 44, 41, 0.6);
+}
+
+#about {
+    background-color: rgba(75, 63, 58, 0.4);
+}
+
+#blog {
+    background-color: rgba(61, 51, 45, 0.5);
+}
+
+#contact {
+    background-color: rgba(55, 44, 41, 0.5);
 }
 
 .section-title {
@@ -355,7 +388,7 @@ section {
     width: 100%;
     height: 100%;
     z-index: 0;
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 .hero-background {
