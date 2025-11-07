@@ -2082,9 +2082,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 shapeSelector.classList.add('collapsed');
             }
             
-            // Toggle expand/collapse on header click
+            // Toggle expand/collapse on header click (support both click and touch)
             if (shapeSelectorHeader) {
-                shapeSelectorHeader.addEventListener('click', function(e) {
+                const toggleMenu = function(e) {
+                    e.preventDefault();
                     e.stopPropagation();
                     if (shapeSelector) {
                         const isCollapsed = shapeSelector.classList.contains('collapsed');
@@ -2096,13 +2097,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             shapeSelector.classList.add('collapsed');
                         }
                     }
-                });
+                };
+                
+                shapeSelectorHeader.addEventListener('click', toggleMenu);
+                shapeSelectorHeader.addEventListener('touchend', toggleMenu);
             }
             
             // Set up shape button clicks
             if (shapeButtons.length > 0) {
                 shapeButtons.forEach(btn => {
-                    btn.addEventListener('click', function(e) {
+                    const handleShapeSelection = function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         
@@ -2147,7 +2151,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         } else {
                             console.error('Animation instance not found!');
                         }
-                    });
+                    };
+                    
+                    // Add both click and touch events for better mobile support
+                    btn.addEventListener('click', handleShapeSelection);
+                    btn.addEventListener('touchend', handleShapeSelection);
                 });
                 console.log('Shape selector buttons set up complete');
             } else {
