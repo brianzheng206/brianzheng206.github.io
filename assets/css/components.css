@@ -34,7 +34,7 @@
 
 .projects-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
     gap: var(--spacing-2xl);
 }
 
@@ -55,7 +55,7 @@
 .project-image {
     position: relative;
     overflow: hidden;
-    height: 250px;
+    height: 180px;
     background-color: var(--bg-secondary);
 }
 
@@ -113,7 +113,7 @@
 }
 
 .project-content {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-lg);
 }
 
 .project-title {
@@ -123,14 +123,14 @@
 
 .project-description {
     color: var(--text-secondary);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
 }
 
 .project-tech {
     display: flex;
     flex-wrap: wrap;
     gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
 }
 
 .tech-badge {
@@ -145,13 +145,14 @@
 
 .project-narrative {
     border-top: 1px solid var(--border-color);
-    padding-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
 }
 
 .narrative-item {
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
+    line-height: 1.5;
 }
 
 .narrative-item strong {
@@ -332,6 +333,7 @@
     gap: var(--spacing-xl);
     overflow-x: visible;
     width: 100%;
+    align-items: flex-start;        /* Align all cards to the top */
 }
 
 .skills-container .skill-category-card {
@@ -356,6 +358,8 @@
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-lg);
     font-size: var(--font-size-xl);
+    min-height: 32px;               /* Ensure consistent header height */
+    height: 32px;                    /* Fixed height for alignment */
 }
 
 /* --- Fix the grid so items line up and wrap cleanly --- */
@@ -365,7 +369,8 @@
     grid-template-columns: repeat(2, 1fr);
     gap: var(--spacing-lg);
     justify-items: stretch;
-    align-items: stretch;
+    align-items: start;              /* Align items to start for consistent positioning */
+    align-content: start;            /* Align grid content to start */
 }
 
 /* --- Make each icon box consistent and prevent overflow --- */
@@ -399,21 +404,21 @@
 .skill-icon i,
 .skill-icon svg,
 .skill-icon img {
-    width: 40px !important;
-    height: 40px !important;
-    line-height: 40px;              /* helps font-icon centering */
-    flex: 0 0 40px !important;
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px;              /* helps font-icon centering */
+    flex: 0 0 32px !important;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
-    font-size: 40px !important;
-    max-width: 40px !important;
-    max-height: 40px !important;
-    min-width: 40px;
-    min-height: 40px;
-    overflow: hidden;
+    font-size: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    min-width: 32px;
+    min-height: 32px;
     box-sizing: border-box;
+    object-fit: contain;            /* For images/SVGs */
 }
 
 /* Slightly larger on wider screens if you like */
@@ -421,12 +426,12 @@
     .skill-icon i,
     .skill-icon svg,
     .skill-icon img {
-        width: 44px !important;
-        height: 44px !important;
-        line-height: 44px;
-        font-size: 44px !important;
-        max-width: 44px;
-        max-height: 44px;
+        width: 36px !important;
+        height: 36px !important;
+        line-height: 36px;
+        font-size: 36px !important;
+        max-width: 36px !important;
+        max-height: 36px !important;
     }
 }
 
@@ -446,6 +451,15 @@
     line-height: 1.4;
     visibility: visible;
     opacity: 1;
+    /* Dynamic font sizing that adapts to container */
+    font-size: clamp(0.7rem, 2.2vw, var(--font-size-sm));
+}
+
+/* Smaller font for longer labels to prevent cutoff */
+.skill-icon[data-tooltip*="ArduPilot"] span,
+.skill-icon[data-tooltip*="SOLIDWORKS"] span {
+    font-size: clamp(0.6rem, 1.8vw, 0.7rem);
+    letter-spacing: -0.01em;        /* Slightly tighter letter spacing */
 }
 
 /* --- If you're using devicon / Font Awesome, normalize line-height --- */
@@ -459,13 +473,13 @@
 .skill-icon i[class*=" fab-"] {
     line-height: 1;
     /* Force consistent sizing for all Font Awesome icons */
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 40px !important;
-    max-width: 40px !important;
-    max-height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
 }
 
 @media (min-width: 1024px) {
@@ -473,13 +487,13 @@
     .skill-icon i[class*=" fas-"],
     .skill-icon i[class^="fab"],
     .skill-icon i[class*=" fab-"] {
-        width: 44px !important;
-        height: 44px !important;
-        font-size: 44px !important;
-        max-width: 44px !important;
-        max-height: 44px !important;
-        min-width: 44px !important;
-        min-height: 44px !important;
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 36px !important;
+        max-width: 36px !important;
+        max-height: 36px !important;
+        min-width: 36px !important;
+        min-height: 36px !important;
     }
 }
 

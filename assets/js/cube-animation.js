@@ -21,7 +21,7 @@ class FourierImageAnimation {
         this.centerX = this.width / 2;
         this.centerY = this.height / 2;
         this.time = 0;
-        this.speed = 0.85 * Math.PI / samplePoints; // 1 full loop per ~samplePoints frames
+        this.speed = 1.25 * Math.PI / samplePoints; // 1 full loop per ~samplePoints frames
         
         this.terms = terms;
         this.samplePoints = samplePoints;
@@ -47,15 +47,16 @@ class FourierImageAnimation {
         this.prevPath = null;
         this.transitionProgress = 1.0; // 0 = showing old, 1 = showing new
         this.transitionSpeed = 0.0001; // How fast to transition (much slower)
-        this.curveChangeInterval = 5000; // Change curve every 5 seconds
+        this.curveChangeInterval = 10000; // Change curve every 5 seconds
         this.lastCurveChange = Date.now(); // When last transition completed (or animation started)
         this.transitionDuration = 3000; // 3 seconds for full transition (in ms)
         this.transitionStartTime = null; // Track when current transition started (null if no transition active)
         this.lastPathType = undefined; // Track last path type to ensure variety
+        this.currentShapeType = undefined; // Track manually selected shape (undefined = auto mode)
         
         // Phase offsets for multiple epicycles (in radians, relative to full cycle)
         this.epicycleOffsets = [0, Math.PI * 0.25, Math.PI * 0.5, Math.PI * 0.75];
-        this.epicycleScales = [1.0, 0.6, 0.7, 0.5]; // Size multipliers for smaller epicycles
+        this.epicycleScales = [1.1, 0.7, 0.6, 0.4]; // Size multipliers for smaller epicycles
         
         // Generate random parametric path and compute DFT once
         if (!svgPath && !imageSrc) {
@@ -446,6 +447,162 @@ class FourierImageAnimation {
         }
         
         return points;
+    }
+    
+    // Generate different predefined shapes
+    generateShape(shapeType) {
+        console.log('generateShape called with:', shapeType);
+        const numPoints = this.samplePoints;
+        const points = [];
+        const baseSize = Math.min(this.width, this.height) * 0.25;
+        console.log('Generating shape with', numPoints, 'points, baseSize:', baseSize);
+        
+        for (let i = 0; i < numPoints; i++) {
+            const t = (i / numPoints) * Math.PI * 2;
+            let x = 0, y = 0;
+            
+            switch(shapeType) {
+                case 'circle':
+                    x = baseSize * Math.cos(t);
+                    y = baseSize * Math.sin(t);
+                    break;
+                    
+                case 'square':
+                    // Square using Fourier series approximation
+                    for (let n = 1; n <= 15; n += 2) {
+                        const amp = baseSize * 4 / (n * Math.PI);
+                        x += amp * Math.cos(n * t);
+                        y += amp * Math.sin(n * t);
+                    }
+                    break;
+                    
+                case 'star': {
+                    // 5-pointed star
+                    const rStar = baseSize * (0.5 + 0.5 * Math.cos(5 * t));
+                    x = rStar * Math.cos(t);
+                    y = rStar * Math.sin(t);
+                    break;
+                }
+                    
+                case 'heart':
+                    // Heart shape
+                    x = baseSize * 16 * Math.pow(Math.sin(t), 3);
+                    y = baseSize * (-13 * Math.cos(t) + 5 * Math.cos(2*t) + 2 * Math.cos(3*t) + Math.cos(4*t));
+                    break;
+                    
+                case 'triangle':
+                    // Triangle using Fourier series
+                    for (let n = 1; n <= 15; n += 1) {
+                        const amp = baseSize * 8 / (n * n * Math.PI * Math.PI) * (1 - Math.cos(n * Math.PI));
+                        x += amp * Math.cos(n * t);
+                        y += amp * Math.sin(n * t);
+                    }
+                    break;
+                    
+                case 'infinity':
+                    // Infinity symbol (lemniscate)
+                    x = baseSize * Math.cos(t) / (1 + Math.sin(t) * Math.sin(t));
+                    y = baseSize * Math.sin(t) * Math.cos(t) / (1 + Math.sin(t) * Math.sin(t));
+                    break;
+                    
+                case 'flower': {
+                    // Flower shape
+                    const rFlower = baseSize * (0.5 + 0.3 * Math.cos(6 * t));
+                    x = rFlower * Math.cos(t);
+                    y = rFlower * Math.sin(t);
+                    break;
+                }
+                    
+                case 'lissajous':
+                default:
+                    // Random Lissajous curve (default) - use stable random values
+                    // Store random parameters in instance to keep them consistent during transition
+                    if (!this.lissajousParams) {
+                        this.lissajousParams = {
+                            a: 2 + Math.floor(Math.random() * 5),
+                            b: 2 + Math.floor(Math.random() * 5),
+                            phase: Math.random() * Math.PI * 2,
+                            amplitudeX: baseSize * (0.6 + Math.random() * 0.4),
+                            amplitudeY: baseSize * (0.6 + Math.random() * 0.4)
+                        };
+                    }
+                    // Use stored parameters for consistency
+                    const params = this.lissajousParams;
+                    x = params.amplitudeX * Math.cos(params.a * t + params.phase);
+                    y = params.amplitudeY * Math.sin(params.b * t);
+                    break;
+            }
+            
+            points.push({ x: x + this.centerX, y: y + this.centerY });
+        }
+        
+        console.log('generateShape returning', points.length, 'points');
+        console.log('First point:', points[0], 'Last point:', points[points.length - 1]);
+        return points;
+    }
+    
+    // Switch to a different shape
+    switchShape(shapeType) {
+        console.log('Switching to shape:', shapeType);
+        
+        // If "lissajous" is selected, generate a random Lissajous curve but keep it fixed
+        // Don't set to undefined - keep the shape type so auto-switching doesn't interfere
+        if (shapeType === 'lissajous') {
+            // Keep currentShapeType as 'lissajous' to prevent auto-switching
+            this.currentShapeType = 'lissajous';
+            // Generate a random Lissajous curve
+            shapeType = 'lissajous';
+        } else {
+            // Store the current shape type to prevent auto-switching from overriding
+            this.currentShapeType = shapeType;
+        }
+        
+        // Store previous state for smooth transition - deep copy coefficients
+        if (this.baseCoeffs && this.baseCoeffs.length > 0) {
+            this.prevCoeffs = this.baseCoeffs.map(c => ({
+                freq: c.freq,
+                re: c.re,
+                im: c.im,
+                amp: c.amp,
+                phase: c.phase
+            }));
+        } else {
+            this.prevCoeffs = null;
+        }
+        this.prevPath = this.parametricPath ? this.parametricPath.map(p => ({ x: p.x, y: p.y })) : null;
+        
+        // Reset lissajous parameters when switching to a new lissajous curve
+        if (shapeType === 'lissajous') {
+            this.lissajousParams = null; // Force new random parameters
+        }
+        
+        // Generate new shape
+        this.parametricPath = this.generateShape(shapeType);
+        
+        // Center the path
+        const bx = this.parametricPath.reduce((s, p) => s + p.x, 0) / this.parametricPath.length;
+        const by = this.parametricPath.reduce((s, p) => s + p.y, 0) / this.parametricPath.length;
+        this.baseCentered = this.parametricPath.map(p => ({ x: p.x - bx, y: p.y - by }));
+        
+        // Compute new DFT coefficients
+        const newCoeffs = this.computeDFTForPoints(this.baseCentered);
+        
+        // IMPORTANT: Don't overwrite baseCoeffs until we've stored prevCoeffs
+        // The animation loop uses getInterpolatedCoeffs() which reads from baseCoeffs
+        this.baseCoeffs = newCoeffs;
+        
+        // Update max amplitude
+        this.maxAmplitude = this.baseCoeffs.length > 0 ? Math.max(...this.baseCoeffs.map(c => c.amp)) : 1;
+        
+        // Reset transition state and start transition
+        this.transitionProgress = 0;
+        this.transitionStartTime = Date.now();
+        
+        // Reset the automatic curve change timer so it doesn't interfere
+        this.lastCurveChange = Date.now();
+        
+        console.log('Shape switched. New coefficients:', this.baseCoeffs.length, 'Current shape type:', this.currentShapeType);
+        console.log('Transition progress:', this.transitionProgress, 'Has prevCoeffs:', !!this.prevCoeffs);
     }
     
     // Generate a simple Fourier pattern for cursor following (circle/square-like)
@@ -989,13 +1146,13 @@ class FourierImageAnimation {
     
     // Draw epicycles centered at a point with uniform scaling (smooth and stable)
     // Returns the final point position
-    drawEpicyclesCentered(t, centerX, centerY, scale, showCircles = true, opacity = 0.35, firstTipOverride = null) {
+    drawEpicyclesCentered(t, centerX, centerY, scale, showCircles = true, opacity = 0.35, firstTipOverride = null, coeffsOverride = null) {
         const ctx = this.ctx;
         let x = 0, y = 0; // start at origin in canonical space
         ctx.globalAlpha = opacity;
         
-        // Use interpolated coefficients if transitioning
-        const coeffs = this.getInterpolatedCoeffs();
+        // Use provided coefficients or interpolated coefficients if transitioning
+        const coeffs = coeffsOverride || this.getInterpolatedCoeffs();
         
         // Alternating order (looks nicer)
         const sortedCoeffs = [...coeffs].sort((a, b) => {
@@ -1014,7 +1171,9 @@ class FourierImageAnimation {
             // Circle size scaling: smaller amplitudes get bigger multiplier, larger get smaller
             const normalizedAmp = this.maxAmplitude > 0 ? c.amp / this.maxAmplitude : 0;
             const scaleFactor = 3.0 - (normalizedAmp * 1.5);
-            const visualRadius = c.amp * scaleFactor * scale;
+            // Progressive size reduction: rings become smaller as we go down the chain
+            const progressiveScale = Math.pow(0.88, i); // Each ring is 88% of the previous one
+            const visualRadius = c.amp * scaleFactor * scale * progressiveScale;
             
             // Transform to canvas space (just scale and translate)
             const Pc = { x: centerX + x * scale, y: centerY + y * scale };
@@ -1367,7 +1526,9 @@ class FourierImageAnimation {
             // Circle size scaling: smaller amplitudes get bigger multiplier, larger get smaller
             const normalizedAmp = this.maxAmplitude > 0 ? c.amp / this.maxAmplitude : 0;
             const scaleFactor = 3.0 - (normalizedAmp * 1.5);
-            const visualRadius = c.amp * scaleFactor;
+            // Progressive size reduction: rings become smaller as we go down the chain
+            const progressiveScale = Math.pow(0.88, i); // Each ring is 88% of the previous one
+            const visualRadius = c.amp * scaleFactor * progressiveScale;
             
             // Current center in canvas space
             const Pc = this.applySim(T, x, y);
@@ -1434,7 +1595,9 @@ class FourierImageAnimation {
             const normalizedAmp = this.maxAmplitude > 0 ? c.amp / this.maxAmplitude : 0;
             // Inverse scaling: small amps (0.1) get 3x, large amps (1.0) get 1.5x
             const scaleFactor = 3.0 - (normalizedAmp * 1.5);
-            const visualRadius = c.amp * scaleFactor;
+            // Progressive size reduction: rings become smaller as we go down the chain
+            const progressiveScale = Math.pow(0.88, i); // Each ring is 88% of the previous one
+            const visualRadius = c.amp * scaleFactor * progressiveScale;
             
             ctx.beginPath();
             ctx.strokeStyle = this.colors[0];
@@ -1499,9 +1662,13 @@ class FourierImageAnimation {
             
             // Check if enough time has passed since last curve change (or transition completion)
             // Also ensure we're not currently in a transition
+            // Only auto-change if no manual shape has been selected (currentShapeType is undefined)
             const timeSinceLastChange = now - this.lastCurveChange;
-            if (timeSinceLastChange >= this.curveChangeInterval && this.transitionProgress >= 1.0 && !this.transitionStartTime) {
-                console.log('Starting new curve transition at', now, 'time since last:', timeSinceLastChange);
+            if (timeSinceLastChange >= this.curveChangeInterval && 
+                this.transitionProgress >= 1.0 && 
+                !this.transitionStartTime && 
+                (this.currentShapeType === undefined || this.currentShapeType === null)) {
+                console.log('Starting new curve transition at', now, 'time since last:', timeSinceLastChange, 'currentShapeType:', this.currentShapeType);
                 this.transitionToNewCurve();
             }
             
@@ -1537,8 +1704,7 @@ class FourierImageAnimation {
             const originalMaxAmp = this.maxAmplitude;
             
             // Use parametric coefficients only (no cursor interpolation for main animation)
-            this.baseCoeffs = currentParametricCoeffs;
-            
+            // Temporarily use interpolated coefficients for drawing (but don't modify baseCoeffs)
             // Use parametric max amplitude
             const parametricMaxAmp = currentParametricCoeffs.length > 0 ? 
                 Math.max(...currentParametricCoeffs.map(c => c.amp)) : 1;
@@ -1558,7 +1724,8 @@ class FourierImageAnimation {
                 const opacity = e === 0 ? 0.40 : 0.2;
                 
                 // Draw epicycles normally (no cursor override for main animation)
-                const p = this.drawEpicyclesCentered(tOffset, epicycleCenterX, epicycleCenterY, scale, showCircles, opacity);
+                // Pass the interpolated coefficients directly to avoid overwriting baseCoeffs
+                const p = this.drawEpicyclesCentered(tOffset, epicycleCenterX, epicycleCenterY, scale, showCircles, opacity, null, currentParametricCoeffs);
                 
                 // Smooth the point during transition to prevent jitter
                 if (this.transitionProgress < 1.0 && this.trails[e].length > 0) {
@@ -1791,15 +1958,128 @@ class NavCubeAnimation {
     }
 }
 
+// Store animation instance globally for shape switching
+window.fourierAnimationInstance = null;
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('cubeCanvas')) {
         // Generate rotating cube outline with Fourier epicycles
-        new FourierImageAnimation('cubeCanvas', {
+        fourierAnimationInstance = new FourierImageAnimation('cubeCanvas', {
             terms: 80,
             samplePoints: 600,
             sizeScale: 0.8
         });
+        window.fourierAnimationInstance = fourierAnimationInstance;
+        
+        // Set up collapsible shape selector - use a small delay to ensure animation is initialized
+        setTimeout(() => {
+            const shapeSelector = document.getElementById('fourierShapeSelector');
+            const shapeSelectorHeader = document.getElementById('shapeSelectorHeader');
+            const shapeSelectorContent = document.getElementById('shapeSelectorContent');
+            const currentShapeName = document.querySelector('.current-shape-name');
+            const shapeButtons = document.querySelectorAll('.shape-btn');
+            
+            console.log('Setting up collapsible shape selector');
+            console.log('Animation instance exists:', !!window.fourierAnimationInstance);
+            
+            // Initialize as collapsed
+            if (shapeSelector) {
+                shapeSelector.classList.add('collapsed');
+            }
+            
+            // Toggle expand/collapse on header click
+            if (shapeSelectorHeader) {
+                shapeSelectorHeader.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (shapeSelector) {
+                        const isCollapsed = shapeSelector.classList.contains('collapsed');
+                        if (isCollapsed) {
+                            shapeSelector.classList.remove('collapsed');
+                            shapeSelector.classList.add('expanded');
+                        } else {
+                            shapeSelector.classList.remove('expanded');
+                            shapeSelector.classList.add('collapsed');
+                        }
+                    }
+                });
+            }
+            
+            // Set up shape button clicks
+            if (shapeButtons.length > 0) {
+                shapeButtons.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const shapeName = this.getAttribute('data-shape');
+                        const displayName = this.getAttribute('data-display-name') || shapeName;
+                        
+                        console.log('=== SHAPE BUTTON CLICKED ===');
+                        console.log('Shape:', shapeName, 'Display:', displayName);
+                        
+                        if (window.fourierAnimationInstance) {
+                            try {
+                                // Remove active class from all buttons
+                                shapeButtons.forEach(b => b.classList.remove('active'));
+                                // Add active class to clicked button
+                                this.classList.add('active');
+                                
+                                // Update current shape name in header
+                                if (currentShapeName) {
+                                    currentShapeName.textContent = displayName;
+                                    // Add a brief highlight animation
+                                    currentShapeName.style.animation = 'none';
+                                    setTimeout(() => {
+                                        currentShapeName.style.animation = 'pulse 0.5s ease';
+                                    }, 10);
+                                }
+                                
+                                // Switch shape
+                                window.fourierAnimationInstance.switchShape(shapeName);
+                                console.log('Shape switched successfully to:', shapeName);
+                                
+                                // Optionally collapse after selection (uncomment if desired)
+                                // setTimeout(() => {
+                                //     if (shapeSelector) {
+                                //         shapeSelector.classList.remove('expanded');
+                                //         shapeSelector.classList.add('collapsed');
+                                //     }
+                                // }, 500);
+                            } catch (error) {
+                                console.error('ERROR switching shape:', error);
+                                console.error('Stack:', error.stack);
+                            }
+                        } else {
+                            console.error('Animation instance not found!');
+                        }
+                    });
+                });
+                console.log('Shape selector buttons set up complete');
+            } else {
+                console.error('No shape buttons found!');
+            }
+            
+            // Close selector when clicking outside
+            document.addEventListener('click', function(e) {
+                if (shapeSelector && !shapeSelector.contains(e.target)) {
+                    shapeSelector.classList.remove('expanded');
+                    shapeSelector.classList.add('collapsed');
+                }
+            });
+            
+            // Expose test function
+            window.testShapeSwitch = function(shapeName) {
+                console.log('=== MANUAL TEST: Switching to', shapeName, '===');
+                if (window.fourierAnimationInstance && window.fourierAnimationInstance.switchShape) {
+                    window.fourierAnimationInstance.switchShape(shapeName);
+                    console.log('Manual switch completed');
+                } else {
+                    console.error('Cannot switch - instance or method missing');
+                }
+            };
+            console.log('Test function available: window.testShapeSwitch("circle")');
+        }, 500);
     }
     
     // Initialize navigation cube animation

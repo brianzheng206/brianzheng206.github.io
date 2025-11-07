@@ -64,7 +64,7 @@
     
     /* Layout */
     --container-max-width: 1200px;
-    --nav-height: 70px;
+    --nav-height: 85px;
 }
 
 /* Dark theme is now default, so no need for media query override */
@@ -208,15 +208,15 @@ section {
 }
 
 .nav-cube-canvas {
-    width: 48px;
-    height: 48px;
+    width: 52px;
+    height: 52px;
     display: block;
     flex-shrink: 0;
     overflow: visible; /* Ensure nothing gets clipped */
 }
 
 .nav-brand a {
-    font-size: var(--font-size-xl);
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--text-primary);
     text-decoration: none;
@@ -235,6 +235,7 @@ section {
 .nav-link {
     color: var(--text-secondary);
     font-weight: 500;
+    font-size: 1.2rem;
     position: relative;
     transition: color var(--transition-fast);
 }
@@ -354,6 +355,7 @@ section {
     width: 100%;
     height: 100%;
     z-index: 0;
+    pointer-events: none;
 }
 
 .hero-background {
@@ -436,6 +438,414 @@ section {
     font-size: var(--font-size-2xl);
 }
 
+/* Fourier Shape Selector - Collapsible */
+.fourier-shape-selector {
+    position: absolute;
+    top: calc(var(--nav-height) + var(--spacing-md));
+    left: var(--spacing-lg);
+    z-index: 1;
+    background-color: rgba(61, 51, 45, 0.95);
+    backdrop-filter: blur(15px);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+    min-width: 200px;
+    max-width: 320px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fourier-shape-selector:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.fourier-shape-selector.collapsed .shape-selector-content {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.fourier-shape-selector.expanded .shape-selector-content {
+    max-height: 500px;
+    opacity: 1;
+    overflow: visible;
+}
+
+.fourier-shape-selector.collapsed .shape-selector-arrow {
+    transform: rotate(-90deg);
+}
+
+.shape-selector-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    position: relative;
+}
+
+.shape-selector-header:hover {
+    background-color: rgba(110, 92, 84, 0.2);
+}
+
+.shape-selector-header:active {
+    background-color: rgba(110, 92, 84, 0.3);
+}
+
+.shape-selector-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    position: relative;
+    opacity: 0.8;
+    transition: transform 0.3s ease, opacity 0.2s ease;
+}
+
+.shape-selector-icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--text-secondary);
+    border-radius: 3px;
+    box-shadow: 
+        0 0 0 1px var(--text-secondary),
+        inset 2px 2px 0 var(--text-secondary),
+        inset -2px -2px 0 var(--text-secondary);
+}
+
+.shape-selector-header:hover .shape-selector-icon {
+    transform: rotate(15deg);
+    opacity: 1;
+}
+
+.shape-selector-title {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.current-shape-name {
+    color: var(--color-lightest);
+    font-weight: 700;
+    transition: color 0.3s ease;
+    margin-left: 6px;
+}
+
+.shape-selector-arrow {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
+}
+
+.shape-selector-content {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease,
+                padding 0.3s ease,
+                margin 0.3s ease,
+                overflow 0.3s ease;
+    padding: 0 var(--spacing-md);
+    margin: 0;
+}
+
+.shape-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) 0;
+}
+
+.shape-btn {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px var(--spacing-sm);
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    min-height: 70px;
+}
+
+.fourier-shape-selector.collapsed .shape-btn {
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+}
+
+.fourier-shape-selector.expanded .shape-btn {
+    animation: fadeInUp 0.4s ease forwards;
+    pointer-events: auto;
+}
+
+.fourier-shape-selector.expanded .shape-btn:nth-child(1) { animation-delay: 0.05s; }
+.fourier-shape-selector.expanded .shape-btn:nth-child(2) { animation-delay: 0.1s; }
+.fourier-shape-selector.expanded .shape-btn:nth-child(3) { animation-delay: 0.15s; }
+.fourier-shape-selector.expanded .shape-btn:nth-child(4) { animation-delay: 0.2s; }
+.fourier-shape-selector.expanded .shape-btn:nth-child(5) { animation-delay: 0.25s; }
+.fourier-shape-selector.expanded .shape-btn:nth-child(6) { animation-delay: 0.3s; }
+
+.shape-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(110, 92, 84, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s ease, height 0.4s ease;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.shape-btn:hover::before {
+    width: 200px;
+    height: 200px;
+}
+
+.shape-btn:hover {
+    border-color: var(--color-lightest);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.shape-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.shape-btn.active {
+    background: linear-gradient(135deg, var(--color-lightest), rgba(110, 92, 84, 0.8));
+    color: var(--text-primary);
+    border-color: var(--color-lightest);
+    box-shadow: 0 4px 16px rgba(110, 92, 84, 0.4);
+    font-weight: 600;
+}
+
+.shape-btn.active::before {
+    background: rgba(110, 92, 84, 0.3);
+}
+
+.shape-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+/* Random icon - dice pattern */
+.shape-icon-random {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shape-icon-random::before,
+.shape-icon-random::after {
+    content: '';
+    position: absolute;
+    background-color: currentColor;
+    border-radius: 2px;
+}
+
+.shape-icon-random::before {
+    width: 3px;
+    height: 3px;
+    top: 8px;
+    left: 8px;
+    box-shadow: 
+        7px 0 0 currentColor,
+        0 7px 0 currentColor,
+        7px 7px 0 currentColor,
+        3.5px 3.5px 0 currentColor;
+}
+
+.shape-icon-random::after {
+    width: 2.5px;
+    height: 2.5px;
+    top: 20px;
+    left: 20px;
+    box-shadow: 
+        5px 0 0 currentColor,
+        0 5px 0 currentColor;
+}
+
+/* Circle icon */
+.shape-icon-circle {
+    border: 2.5px solid currentColor;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
+}
+
+/* Square icon */
+.shape-icon-square {
+    border: 2.5px solid currentColor;
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
+    border-radius: 2px;
+}
+
+/* Star icon - 5-pointed star using clip-path */
+.shape-icon-star {
+    width: 28px;
+    height: 28px;
+    position: relative;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: currentColor;
+    clip-path: polygon(
+        50% 0%,
+        61% 35%,
+        98% 35%,
+        68% 57%,
+        79% 91%,
+        50% 70%,
+        21% 91%,
+        32% 57%,
+        2% 35%,
+        39% 35%
+    );
+}
+
+/* Heart icon - using clip-path polygon for complete shape */
+.shape-icon-heart {
+    width: 24px;
+    height: 22px;
+    position: relative;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: currentColor;
+    clip-path: polygon(
+        50% 100%,
+        0% 50%,
+        20% 20%,
+        50% 35%,
+        80% 20%,
+        100% 50%
+    );
+}
+
+/* Infinity icon — clean, slanted, no connector, no gap */
+.shape-icon-infinity {
+  width: 26px;            /* a touch wider for overlap room */
+  height: 12px;
+  position: relative;
+  display: inline-block;
+  background: none;       /* no center dashes/line */
+  transform: rotate(-18deg);
+  transform-origin: center;
+}
+
+.shape-icon-infinity::before,
+.shape-icon-infinity::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 14px;            /* oval loop */
+  height: 10px;
+  border: 2px solid currentColor;
+  border-radius: 999px;   /* make it an oval */
+  box-sizing: border-box;
+  /* slight stretch makes it look sleeker */
+  transform: translateY(-50%) scaleX(1.15) rotate(35deg);
+}
+
+/* Left loop — pull inward to remove the gap */
+.shape-icon-infinity::before {
+  left: 0px;             /* stronger negative offset = overlap (no gap) */
+}
+
+/* Right loop — mirror inward */
+.shape-icon-infinity::after {
+  right: 1px;
+}
+
+.shape-btn:hover .shape-icon {
+    transform: scale(1.2) rotate(5deg);
+}
+
+.shape-btn.active .shape-icon {
+    transform: scale(1.15);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.shape-name {
+    font-size: 0.7rem;
+    font-weight: 500;
+    transition: color 0.2s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.shape-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(110, 92, 84, 0.3);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1.15);
+    }
+    50% {
+        transform: scale(1.25);
+    }
+}
+
 @keyframes bounce {
     0%, 20%, 50%, 80%, 100% {
         transform: translateX(-50%) translateY(0);
@@ -510,6 +920,43 @@ section {
     
     section {
         padding: var(--spacing-2xl) 0;
+    }
+    
+    .fourier-shape-selector {
+        top: calc(var(--nav-height) + var(--spacing-xs));
+        left: var(--spacing-sm);
+        max-width: calc(100% - var(--spacing-md));
+        min-width: 180px;
+        position: absolute;
+    }
+    
+    .shape-selector-header {
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+    
+    .shape-selector-title {
+        font-size: 0.8rem;
+    }
+    
+    .shape-selector-icon {
+        font-size: 0.9rem;
+    }
+    
+    .shape-buttons-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    
+    .shape-btn {
+        padding: 8px 4px;
+    }
+    
+    .shape-icon {
+        font-size: 1.1rem;
+    }
+    
+    .shape-name {
+        font-size: 0.65rem;
     }
 }
 
