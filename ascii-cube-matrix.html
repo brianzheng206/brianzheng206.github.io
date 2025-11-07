@@ -35,11 +35,10 @@
 
         #canvas {
             display: block;
-            width: 100%;
-            height: 100%;
             background-color: #372c29;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
+            margin: 0 auto;
         }
 
         .info {
@@ -95,6 +94,67 @@
             color: #6e5c54;
             text-decoration: underline;
         }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .info {
+                top: 10px;
+                left: 10px;
+                padding: 10px 15px;
+                font-size: 11px;
+                max-width: 200px;
+            }
+
+            .info h1 {
+                font-size: 14px;
+                margin-bottom: 8px;
+            }
+
+            .info p {
+                font-size: 10px;
+                margin-bottom: 4px;
+            }
+
+            .attribution {
+                bottom: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 9px;
+            }
+
+            #canvas {
+                max-width: 100vw;
+                max-height: 100vh;
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .info {
+                top: 8px;
+                left: 8px;
+                padding: 8px 12px;
+                font-size: 10px;
+                max-width: 180px;
+            }
+
+            .info h1 {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+
+            .info p {
+                font-size: 9px;
+                margin-bottom: 3px;
+            }
+
+            .attribution {
+                bottom: 8px;
+                right: 8px;
+                padding: 6px 10px;
+                font-size: 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -121,8 +181,10 @@
                 this.charWidth = 8;
                 this.charHeight = 16;
                 this.scale = 1.0;
-                this.width = 160;
-                this.height = 44;
+                // Use smaller dimensions on mobile to prevent elongation
+                const isMobile = window.innerWidth <= 768;
+                this.width = isMobile ? 80 : 160;
+                this.height = isMobile ? 60 : 44;
                 this.updateCanvasSize();
                 
                 // Z-buffer and character buffer
@@ -179,19 +241,71 @@
             }
             
             updateCanvasSize() {
+                // Detect mobile
+                const isMobile = window.innerWidth <= 768;
+                
+                // Update dimensions if switching between mobile/desktop
+                if (isMobile && this.width === 160) {
+                    // On mobile, use dimensions that fill the screen better
+                    this.width = Math.floor(window.innerWidth / this.charWidth);
+                    this.height = Math.floor(window.innerHeight / this.charHeight);
+                    // Reinitialize buffers with new size
+                    this.zBuffer = new Float32Array(this.width * this.height);
+                    this.buffer = new Array(this.width * this.height);
+                } else if (!isMobile && this.width !== 160) {
+                    this.width = 160;
+                    this.height = 44;
+                    // Reinitialize buffers with new size
+                    this.zBuffer = new Float32Array(this.width * this.height);
+                    this.buffer = new Array(this.width * this.height);
+                }
+                
                 // Scale canvas to fit screen while maintaining character grid
-                const scaleX = window.innerWidth / (this.width * this.charWidth);
-                const scaleY = (window.innerHeight - 100) / (this.height * this.charHeight);
-                this.scale = Math.min(scaleX, scaleY, 3.0);
-                
-                // Ensure minimum scale
-                if (this.scale < 0.5) this.scale = 0.5;
-                
-                this.canvas.width = this.width * this.charWidth * this.scale;
-                this.canvas.height = this.height * this.charHeight * this.scale;
+                if (isMobile) {
+                    // On mobile, make canvas fill screen and scale to fit
+                    const exactWidth = this.width * this.charWidth;
+                    const exactHeight = this.height * this.charHeight;
+                    
+                    // Calculate scale to fill screen
+                    const scaleX = window.innerWidth / exactWidth;
+                    const scaleY = window.innerHeight / exactHeight;
+                    this.scale = Math.min(scaleX, scaleY);
+                    
+                    this.canvas.width = exactWidth;
+                    this.canvas.height = exactHeight;
+                    // Scale canvas to fill screen while maintaining aspect ratio
+                    this.canvas.style.width = `${exactWidth * this.scale}px`;
+                    this.canvas.style.height = `${exactHeight * this.scale}px`;
+                    this.canvas.style.margin = '0';
+                    this.canvas.style.position = 'fixed';
+                    this.canvas.style.top = '50%';
+                    this.canvas.style.left = '50%';
+                    this.canvas.style.transform = 'translate(-50%, -50%)';
+                } else {
+                    // Desktop: scale to fit while maintaining aspect ratio
+                    let scaleX = window.innerWidth / (this.width * this.charWidth);
+                    let scaleY = window.innerHeight / (this.height * this.charHeight);
+                    this.scale = Math.min(scaleX, scaleY, 3.0);
+                    if (this.scale < 0.5) this.scale = 0.5;
+                    
+                    this.canvas.width = this.width * this.charWidth * this.scale;
+                    this.canvas.height = this.height * this.charHeight * this.scale;
+                    // Remove any CSS width/height that might stretch the canvas
+                    this.canvas.style.width = '';
+                    this.canvas.style.height = '';
+                    this.canvas.style.margin = '0 auto';
+                    this.canvas.style.position = '';
+                    this.canvas.style.top = '';
+                    this.canvas.style.left = '';
+                }
                 
                 // Re-set context properties after canvas resize (context is lost when canvas size changes)
-                this.ctx.font = `${this.charHeight * this.scale}px 'Courier New', monospace`;
+                if (isMobile) {
+                    // On mobile, font size stays at base size since we scale via CSS
+                    this.ctx.font = `${this.charHeight}px 'Courier New', monospace`;
+                } else {
+                    this.ctx.font = `${this.charHeight * this.scale}px 'Courier New', monospace`;
+                }
                 this.ctx.fillStyle = this.textColor;
                 this.ctx.textAlign = 'left';
                 this.ctx.textBaseline = 'top';
@@ -336,6 +450,9 @@
             }
             
             render() {
+                // Detect mobile
+                const isMobile = window.innerWidth <= 768;
+                
                 // Clear buffers
                 for (let i = 0; i < this.width * this.height; i++) {
                     this.buffer[i] = this.backgroundASCIICode;
@@ -343,7 +460,8 @@
                 }
                 
                 // Draw multiple cubes of different sizes (matching reference code)
-                let cubeWidth = 20;
+                // Use smaller cubes on mobile
+                let cubeWidth = isMobile ? 10 : 20;
                 let horizontalOffset = -2 * cubeWidth;
                 
                 // First cube (centered)
@@ -358,9 +476,9 @@
                     }
                 }
                 
-                cubeWidth = 10;
+                cubeWidth = isMobile ? 5 : 10;
                 // Second cube - 3D orbit around center cube
-                const orbitRadius = 40; // Distance from center
+                const orbitRadius = isMobile ? 20 : 40; // Smaller orbit on mobile
                 // 3D orbit: X, Y, Z all vary to create a 3D orbital path
                 const orbitX = Math.cos(this.orbitAngle) * orbitRadius;
                 const orbitY = Math.sin(this.orbitAngle * 1.3) * orbitRadius * 0.6; // Different frequency for Y
@@ -398,14 +516,27 @@
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 
                 this.ctx.fillStyle = this.textColor;
-                this.ctx.font = `${this.charHeight * this.scale}px 'Courier New', monospace`;
+                if (isMobile) {
+                    this.ctx.font = `${this.charHeight}px 'Courier New', monospace`;
+                } else {
+                    this.ctx.font = `${this.charHeight * this.scale}px 'Courier New', monospace`;
+                }
                 this.ctx.textAlign = 'left';
                 this.ctx.textBaseline = 'top';
                 
-                for (let k = 0; k < this.width * this.height; k++) {
-                    const x = (k % this.width) * this.charWidth * this.scale;
-                    const y = Math.floor(k / this.width) * this.charHeight * this.scale;
-                    this.ctx.fillText(this.buffer[k], x, y);
+                // Render characters - on mobile, use exact positions (scaling handled by CSS)
+                if (isMobile) {
+                    for (let k = 0; k < this.width * this.height; k++) {
+                        const x = (k % this.width) * this.charWidth;
+                        const y = Math.floor(k / this.width) * this.charHeight;
+                        this.ctx.fillText(this.buffer[k], x, y);
+                    }
+                } else {
+                    for (let k = 0; k < this.width * this.height; k++) {
+                        const x = (k % this.width) * this.charWidth * this.scale;
+                        const y = Math.floor(k / this.width) * this.charHeight * this.scale;
+                        this.ctx.fillText(this.buffer[k], x, y);
+                    }
                 }
             }
             

@@ -126,6 +126,27 @@ if (!prefersReducedMotion.matches) {
     });
 }
 
+// Collapsible experience timeline items
+document.addEventListener('DOMContentLoaded', function() {
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    
+    timelineItems.forEach(item => {
+        // Start collapsed by default
+        item.classList.remove('expanded');
+        
+        // Add click handler
+        item.addEventListener('click', function(e) {
+            // Don't toggle if clicking on a link
+            if (e.target.tagName === 'A' || e.target.closest('a')) {
+                return;
+            }
+            
+            // Toggle expanded class
+            this.classList.toggle('expanded');
+        });
+    });
+});
+
 // Position secondary timeline icon for multi-role timeline items
 document.addEventListener('DOMContentLoaded', function() {
     function positionSecondaryIcon() {
@@ -135,23 +156,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const timelineContent = timelineItem ? timelineItem.querySelector('.timeline-content') : null;
         const coopHeader = coopRole ? coopRole.querySelector('.timeline-header') : null;
         
-        if (secondaryIcon && coopRole && timelineItem && timelineContent && coopHeader) {
-            // Get the position of the header relative to the timeline-content
-            const headerOffsetTop = coopHeader.offsetTop;
+        if (secondaryIcon && coopRole && timelineItem && coopHeader) {
+            // Get the h3 element directly (the title we want to align with)
+            const h3Element = coopHeader.querySelector('h3');
             
-            // Get the position of timeline-content relative to timeline-item
-            // Since timeline-content is a direct child, we can use offsetTop
-            const contentOffsetTop = timelineContent.offsetTop;
-            
-            // Calculate total offset from timeline-item top
-            const totalOffset = contentOffsetTop + headerOffsetTop;
-            
-            // Align icon center with header center
-            const headerHeight = coopHeader.offsetHeight;
-            const iconHeight = secondaryIcon.offsetHeight;
-            const iconTop = totalOffset + (headerHeight / 2) - (iconHeight / 2);
-            
-            secondaryIcon.style.top = `${iconTop}px`;
+            if (h3Element) {
+                // Get the absolute position of the h3 relative to the page
+                const h3Rect = h3Element.getBoundingClientRect();
+                const itemRect = timelineItem.getBoundingClientRect();
+                
+                // Calculate the offset from the timeline-item top to the h3 center
+                const h3RelativeTop = h3Rect.top - itemRect.top;
+                const h3Height = h3Rect.height;
+                const iconHeight = secondaryIcon.offsetHeight;
+                
+                // Align icon center with h3 center
+                const iconTop = h3RelativeTop + (h3Height / 2) - (iconHeight / 2);
+                
+                secondaryIcon.style.top = `${iconTop}px`;
+            }
         }
     }
     
@@ -161,11 +184,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reposition after a short delay to ensure layout is complete
     setTimeout(positionSecondaryIcon, 100);
     
-    // Reposition on window resize
+    // Reposition on window resize and after expand/collapse
     let resizeTimeout;
     window.addEventListener('resize', function() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(positionSecondaryIcon, 100);
+    });
+    
+    // Reposition icon continuously during expand/collapse for instant sync
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    timelineItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const animationDuration = 500;
+            const startTime = performance.now();
+            let animationId;
+            
+            function updateIcon(currentTime) {
+                const elapsed = currentTime - startTime;
+                
+                // Update icon position every frame
+                positionSecondaryIcon();
+                
+                // Continue updating while animation is running
+                if (elapsed < animationDuration) {
+                    animationId = requestAnimationFrame(updateIcon);
+                } else {
+                    // Final update to ensure accuracy
+                    positionSecondaryIcon();
+                }
+            }
+            
+            // Start updating immediately
+            animationId = requestAnimationFrame(updateIcon);
+        });
     });
 });
 

@@ -280,6 +280,60 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Open fullscreen iframe for visualizations
+    function openFullscreenIframe(src, card) {
+        // Create fullscreen iframe container
+        const iframeContainer = document.createElement('div');
+        iframeContainer.className = 'fullscreen-iframe-container';
+        iframeContainer.innerHTML = `
+            <button class="fullscreen-iframe-close" aria-label="Close">
+                <i class="fas fa-times"></i>
+            </button>
+            <iframe src="${src}" class="fullscreen-iframe" frameborder="0"></iframe>
+        `;
+        
+        document.body.appendChild(iframeContainer);
+        
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+        
+        // Trigger animation
+        setTimeout(() => {
+            iframeContainer.classList.add('active');
+        }, 10);
+        
+        // Close button handler
+        const closeBtn = iframeContainer.querySelector('.fullscreen-iframe-close');
+        closeBtn.addEventListener('click', closeFullscreenIframe);
+        
+        // Close on Escape key
+        const escapeHandler = function(e) {
+            if (e.key === 'Escape') {
+                closeFullscreenIframe();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        // Store current container
+        currentModal = iframeContainer;
+    }
+    
+    // Close fullscreen iframe
+    function closeFullscreenIframe() {
+        const container = document.querySelector('.fullscreen-iframe-container');
+        if (container) {
+            container.classList.remove('active');
+            setTimeout(() => {
+                if (container.parentNode) {
+                    container.parentNode.removeChild(container);
+                }
+                document.body.style.overflow = '';
+                currentModal = null;
+            }, 1100); // Wait for exit animation to complete (1s + buffer)
+        }
+    }
+    
     // Add click handlers to project cards
     projectCards.forEach(card => {
         card.addEventListener('click', function(e) {
@@ -288,8 +342,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Open modal with this card's content
-            openProjectModal(card);
+            // Check if this is an iframe project (visualization)
+            const iframeSrc = card.getAttribute('data-iframe');
+            if (iframeSrc) {
+                openFullscreenIframe(iframeSrc, card);
+            } else {
+                // Open modal with this card's content
+                openProjectModal(card);
+            }
         });
     });
     
