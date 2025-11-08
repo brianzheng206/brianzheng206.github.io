@@ -204,11 +204,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Respect prefers-reduced-motion
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         // Snappy but smooth timings
-        const DURATION = prefersReduced ? 1 : 480;       // FLIP motion (slower, more elegant)
-        const DURATION_ENTER = prefersReduced ? 1 : 950; // fade-in with slide (smooth, elegant, slower)
-        const DURATION_EXIT = prefersReduced ? 1 : 200;  // exit
-        const EASE_SPRING = 'cubic-bezier(0.22, 1, 0.36, 1)';        // for FLIP
-        const EASE_SOFT_OUT = 'cubic-bezier(0.33, 1, 0.68, 1)';   // smooth ease-out for fade-in
+        // Snappier timings to reduce perceived delay on filter switch
+        // Slow down fade-in and slide animations as requested
+        const DURATION = prefersReduced ? 1 : 500;       // FLIP motion (staying cards)
+        const DURATION_ENTER = prefersReduced ? 1 : 600; // slower enter fade + slide
+        const DURATION_EXIT = prefersReduced ? 1 : 120;  // faster exit fade
+        const EXIT_DELAY = prefersReduced ? 0 : 80;      // keep slight overlap
+        const EASE_SOFT_OUT = 'cubic-bezier(0.33, 1, 0.68, 1)';   // smooth ease-out for all animations
 
         // Temporarily disable scroll snapping/behavior during filter animations
         function suspendScrollSnap(container) {
@@ -260,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 { transform: 'translate3d(0, 0, 0) scale(1, 1)' }
             ], {
                 duration: options.duration ?? DURATION,
-                easing: options.easing ?? EASE_SPRING,
+                easing: options.easing ?? EASE_SOFT_OUT,
                 fill: 'both',
                 composite: 'replace'
             });
@@ -495,11 +497,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         card.style.visibility = 'hidden';
                     });
 
+                    // Note: avoid auto-scrolling here; keep viewport fixed so exiting clones
+                    // match original positions and do not appear to jump before fading out.
+
                     // 6) Prepare exiting cards: create overlay clones for smooth fade-out without affecting layout
                     const exitClones = new Map();
                     toHide.forEach(card => {
                         try {
-                            const rect = card.getBoundingClientRect();
+                            // Use pre-change geometry so exit clones appear exactly where the card was
+                            const rect = firstRects.get(card) || card.getBoundingClientRect();
                             const clone = card.cloneNode(true);
                             const style = clone.style;
                             style.position = 'fixed';
@@ -532,10 +538,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     // 7) Snapshot "LAST" rects of all cards that will be visible after filter
-                    // Make entering cards visible for measurement (but keep opacity at 0 for animation)
+                    // Temporarily make entering cards visible for accurate measurement, then hide again
                     toShow.forEach(card => {
-                        card.style.visibility = 'visible';
                         card.style.transform = '';
+                        card.style.visibility = 'visible';
+                        card.style.opacity = '0'; // Keep opacity 0 so they're not visible
                     });
                     // Force synchronous layout to settle before measurement
                     grid.offsetWidth; grid.offsetHeight; grid.offsetWidth;
@@ -556,8 +563,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Only measure cards that belong to this filter and are not exiting
                         if (shouldShow && !toHide.has(card)) {
                             const cs = window.getComputedStyle(card);
-                            const visible = cs.display !== 'none' && cs.visibility !== 'hidden';
-                            if (visible) {
+                            const displayed = cs.display !== 'none';
+                            if (displayed) {
                                 try {
                                     const rect = card.getBoundingClientRect();
                                     if (rect.width > 0 && rect.height > 0) {
@@ -567,6 +574,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         }
                     });
+                    
+                    // Hide entering cards again after measurement to prevent flash
+                    toShow.forEach(card => {
+                        card.style.visibility = 'hidden';
+                        card.style.opacity = '0';
+                    });
+                    // Force a reflow to ensure visibility change is applied
+                    grid.offsetWidth;
                     
                     // Do not force scrollLeft; avoid flicker from abrupt repositioning
 
@@ -594,11 +609,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             );
                         }
                         try { card.style.willChange = 'transform, opacity'; } catch(_){}
-                        stayingAnims.push(flipAnimate(card, firstRect, lastRect, { duration: DURATION, easing: EASE_SPRING }));
+                        stayingAnims.push(flipAnimate(card, firstRect, lastRect, { duration: DURATION, easing: EASE_SOFT_OUT }));
                     });
                     
-                    // 8b) entering cards: fade-in with directional slide
+                    // 8b) entering cards: use overlay clones to fade/slide in, originals stay hidden
                     const enteringAnims = [];
+                    const enterClones = new Map();
                     [...toShow].forEach((card) => {
                         // cancel any leftover animations on this card
                         card.getAnimations({ subtree: false }).forEach(a => a.cancel());
@@ -606,71 +622,92 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Start from slightly right and below, fade in while sliding to final position
                         const slideX = 40; // slide from right
                         const slideY = 15; // slight upward movement
-                        
-                        // Clear any existing transforms first
+
+                        // Ensure original remains hidden during the reveal
+                        card.style.visibility = 'hidden';
+                        card.style.opacity = '0';
                         card.style.transform = '';
-                        card.style.opacity = '0';
-                        
-                        // Force a reflow to ensure styles are applied
-                        card.offsetHeight;
-                        
-                        // Set initial state with transform offset
-                        card.style.willChange = 'transform, opacity';
-                        card.style.transform = `translate3d(${slideX}px, ${slideY}px, 0)`;
-                        card.style.opacity = '0';
-                        
-                        // Force another reflow to ensure transform is applied
-                        card.offsetHeight;
 
-                        // Animate both transform and opacity together smoothly
-                        // Use fill: 'both' to ensure initial state is applied immediately
-                        const anim = card.animate(
-                            [
-                                { 
-                                    opacity: 0,
-                                    transform: `translate3d(${slideX}px, ${slideY}px, 0)`
-                                },
-                                { 
-                                    opacity: 1,
-                                    transform: 'translate3d(0, 0, 0)'
+                        // Create a fixed-position clone at the final rect to animate in
+                        try {
+                            const rect = lastRects.get(card);
+                            if (!rect || rect.width === 0 || rect.height === 0) {
+                                // Fallback: measure card directly if not in lastRects
+                                card.style.visibility = 'visible';
+                                const fallbackRect = card.getBoundingClientRect();
+                                card.style.visibility = 'hidden';
+                                if (fallbackRect.width === 0 || fallbackRect.height === 0) {
+                                    return; // Skip if still can't measure
                                 }
-                            ],
-                            {
-                                duration: DURATION_ENTER,   // ~800ms for smooth, elegant fade
-                                easing: EASE_SOFT_OUT,      // smooth ease-out curve
-                                fill: 'both',               // apply both start and end states
-                                composite: 'replace'        // replace any existing transform
+                                lastRects.set(card, fallbackRect);
                             }
-                        );
+                            
+                            const finalRect = lastRects.get(card);
+                            const clone = card.cloneNode(true);
+                            const style = clone.style;
+                            style.position = 'fixed';
+                            style.left = finalRect.left + 'px';
+                            style.top = finalRect.top + 'px';
+                            style.width = finalRect.width + 'px';
+                            style.height = finalRect.height + 'px';
+                            style.margin = '0';
+                            style.padding = '0';
+                            style.transform = `translate3d(${slideX}px, ${slideY}px, 0)`;
+                            style.opacity = '0';
+                            style.pointerEvents = 'none';
+                            style.zIndex = '1000';
+                            style.boxSizing = 'border-box';
+                            // Ensure clone is visible (even with opacity 0) for animation to work
+                            style.visibility = 'visible';
+                            
+                            document.body.appendChild(clone);
+                            enterClones.set(card, clone);
+                            
+                            // Force a reflow to ensure clone is in DOM before animating
+                            clone.offsetHeight;
 
-                        enteringAnims.push(
-                            anim.finished.catch(() => {}).then(() => { 
-                                card.style.willChange = '';
-                                // Clear transform after animation completes
-                                card.style.transform = '';
-                                card.style.opacity = '';
-                            })
-                        );
+                            const anim = clone.animate([
+                                { opacity: 0, transform: `translate3d(${slideX}px, ${slideY}px, 0)` },
+                                { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+                            ], {
+                                duration: DURATION_ENTER,
+                                easing: EASE_SOFT_OUT,
+                                fill: 'forwards',
+                                composite: 'replace'
+                            });
+
+                            enteringAnims.push(
+                                anim.finished.catch(() => {}).then(() => {
+                                    // Reveal original and remove the clone
+                                    try {
+                                        card.style.visibility = 'visible';
+                                        card.style.opacity = '';
+                                        card.style.transform = '';
+                                    } catch(_) {}
+                                    try {
+                                        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+                                    } catch(_) {}
+                                })
+                            );
+                        } catch(e) {
+                            // If clone creation fails, just show the card directly
+                            console.warn('Failed to create enter clone:', e);
+                            card.style.visibility = 'visible';
+                            card.style.opacity = '1';
+                        }
                     });
                     
-                    // 8c) exiting cards: fade/scale out using overlay clones (originals removed from layout)
+                    // 8c) exiting cards: remove instantly (no fade animation)
                     const exitingPromises = [];
                     if (exitClones && exitClones.size) {
                         exitClones.forEach((clone, orig) => {
                             try { clone.getAnimations({ subtree: false }).forEach(a => a.cancel()); } catch (_) {}
-                            const fadeAnim = clone.animate([
-                                { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
-                                { opacity: 0, transform: 'translate3d(0, -50px, 0) scale(0.9)' }
-                            ], {
-                            duration: DURATION_EXIT,
-                            easing: EASE_SPRING,
-                            fill: 'forwards',
-                            composite: 'replace'
-                        });
-                            const done = fadeAnim.finished.catch(() => {}).then(() => {
+                            // Remove clones instantly without animation
+                            try {
                                 if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
-                            });
-                            exitingPromises.push(done);
+                            } catch(_) {}
+                            // Return resolved promise immediately
+                            exitingPromises.push(Promise.resolve());
                         });
                     }
                     
@@ -701,6 +738,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (exitClones && exitClones.size) {
                             exitClones.forEach((clone) => { try { if (clone.parentNode) clone.parentNode.removeChild(clone); } catch(_){} });
                             exitClones.clear?.();
+                        }
+                        // Remove any enter clones
+                        if (typeof enterClones !== 'undefined' && enterClones && enterClones.size) {
+                            enterClones.forEach((clone) => { try { if (clone.parentNode) clone.parentNode.removeChild(clone); } catch(_){} });
+                            enterClones.clear?.();
                         }
                         if (typeof restoreSnap === 'function') restoreSnap();
                         finalizeStateAndRefreshCache(grid, latestFilter, myRunId);
@@ -740,6 +782,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (exitClones && exitClones.size) {
                         exitClones.forEach((clone) => { try { if (clone.parentNode) clone.parentNode.removeChild(clone); } catch(_){} });
                         exitClones.clear?.();
+                    }
+                    // Ensure any leftover enter clones are removed
+                    if (typeof enterClones !== 'undefined' && enterClones && enterClones.size) {
+                        enterClones.forEach((clone) => { try { if (clone.parentNode) clone.parentNode.removeChild(clone); } catch(_){} });
+                        enterClones.clear?.();
                     }
                 });
             });
