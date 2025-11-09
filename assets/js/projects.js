@@ -396,6 +396,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Capture the abort signal for this specific transition
                     // This ensures we check the correct abort signal even if a new transition starts
                     const signal = abortController?.signal;
+                    // Get the wrapper container for relative positioning (used for both exit and enter clones)
+                    const wrapper = grid.closest('.projects-carousel-wrapper') || grid.parentElement;
+                    const wrapperRect = wrapper ? wrapper.getBoundingClientRect() : { left: 0, top: 0 };
                     
                     // Cancel any previous animations on all cards first
                     cancelAll(projectCards);
@@ -502,15 +505,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     // 6) Prepare exiting cards: create overlay clones for smooth fade-out without affecting layout
                     const exitClones = new Map();
+                    
                     toHide.forEach(card => {
                         try {
                             // Use pre-change geometry so exit clones appear exactly where the card was
                             const rect = firstRects.get(card) || card.getBoundingClientRect();
                             const clone = card.cloneNode(true);
                             const style = clone.style;
-                            style.position = 'fixed';
-                            style.left = rect.left + 'px';
-                            style.top = rect.top + 'px';
+                            style.position = 'absolute';
+                            // Calculate position relative to wrapper instead of viewport
+                            style.left = (rect.left - wrapperRect.left) + 'px';
+                            style.top = (rect.top - wrapperRect.top) + 'px';
                             style.width = rect.width + 'px';
                             style.height = rect.height + 'px';
                             style.margin = '0';
@@ -518,7 +523,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             style.opacity = '1';
                             style.pointerEvents = 'none';
                             style.zIndex = '1000';
-                            document.body.appendChild(clone);
+                            // Append to wrapper instead of body to keep it within the project region
+                            if (wrapper) {
+                                wrapper.appendChild(clone);
+                            } else {
+                                document.body.appendChild(clone);
+                            }
                             exitClones.set(card, clone);
                         } catch (_) {}
                         // Remove originals from layout immediately for measurement
@@ -615,6 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // 8b) entering cards: use overlay clones to fade/slide in, originals stay hidden
                     const enteringAnims = [];
                     const enterClones = new Map();
+                    
                     [...toShow].forEach((card) => {
                         // cancel any leftover animations on this card
                         card.getAnimations({ subtree: false }).forEach(a => a.cancel());
@@ -628,7 +639,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         card.style.opacity = '0';
                         card.style.transform = '';
 
-                        // Create a fixed-position clone at the final rect to animate in
+                        // Create an absolute-positioned clone at the final rect to animate in
                         try {
                             const rect = lastRects.get(card);
                             if (!rect || rect.width === 0 || rect.height === 0) {
@@ -645,9 +656,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             const finalRect = lastRects.get(card);
                             const clone = card.cloneNode(true);
                             const style = clone.style;
-                            style.position = 'fixed';
-                            style.left = finalRect.left + 'px';
-                            style.top = finalRect.top + 'px';
+                            style.position = 'absolute';
+                            // Calculate position relative to wrapper instead of viewport
+                            style.left = (finalRect.left - wrapperRect.left) + 'px';
+                            style.top = (finalRect.top - wrapperRect.top) + 'px';
                             style.width = finalRect.width + 'px';
                             style.height = finalRect.height + 'px';
                             style.margin = '0';
@@ -660,7 +672,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Ensure clone is visible (even with opacity 0) for animation to work
                             style.visibility = 'visible';
                             
-                            document.body.appendChild(clone);
+                            // Append to wrapper instead of body to keep it within the project region
+                            if (wrapper) {
+                                wrapper.appendChild(clone);
+                            } else {
+                                document.body.appendChild(clone);
+                            }
                             enterClones.set(card, clone);
                             
                             // Force a reflow to ensure clone is in DOM before animating
