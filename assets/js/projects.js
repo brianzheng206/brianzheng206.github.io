@@ -77,39 +77,31 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        // --- wheel → horizontal while hovering ---
-        projectsCarousel.addEventListener('wheel', (e) => {
-            // If user is performing a pinch/zoom gesture or holding Ctrl, let the page handle it
+        // --- wheel → force horizontal-only scroll while hovering ---
+        const handleWheelToHorizontal = (e) => {
+            // Allow pinch-zoom or Ctrl+wheel
             if (e.ctrlKey) return;
-            
+
             const { deltaX, deltaY } = e;
-            
-            // Prefer vertical deltas from mouse wheels/trackpads; fall back to deltaX if the device already scrolls sideways.
             const intended = Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
             if (intended === 0) return;
-            
-            const el = projectsCarousel;
-            const maxScroll = el.scrollWidth - el.clientWidth;
-            const atStart = el.scrollLeft <= 0;
-            const atEnd = el.scrollLeft >= maxScroll - 1;
-            
-            // Determine scroll direction (+ = right, - = left)
-            const dir = Math.sign(intended);
-            
-            // If we can scroll in that direction, consume the wheel and move horizontally.
-            const canScrollRight = dir > 0 && !atEnd;
-            const canScrollLeft  = dir < 0 && !atStart;
-            
-            if (canScrollLeft || canScrollRight) {
-                e.preventDefault();               // stop the page from scrolling vertically
-                el.scrollBy({
-                    left: intended,               // natural-feel: use the raw delta
-                    behavior: 'auto'              // 'smooth' feels laggy with continuous wheel; keep it snappy
-                });
-                updateArrowStates();
-            }
-            // else: at an edge → allow the event to bubble so the page can scroll normally
-        }, { passive: false });
+
+            // Always consume the wheel while hovering the carousel/wrapper
+            e.preventDefault();
+
+            projectsCarousel.scrollBy({
+                left: intended,
+                behavior: 'auto'
+            });
+            if (typeof updateArrowStates === 'function') updateArrowStates();
+        };
+
+        projectsCarousel.addEventListener('wheel', handleWheelToHorizontal, { passive: false });
+        // Also handle when hovering the wrapper (e.g., over arrows/edges)
+        const carouselWrapper = projectsCarousel.closest('.projects-carousel-wrapper');
+        if (carouselWrapper) {
+            carouselWrapper.addEventListener('wheel', handleWheelToHorizontal, { passive: false });
+        }
         
         // Also keep arrow-state in sync
         projectsCarousel.addEventListener('scroll', updateArrowStates);
@@ -200,6 +192,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Project filtering functionality (WAAPI-based FLIP animation)
     if (filterButtons.length > 0 && projectCards.length > 0) {
         const grid = projectsCarousel || document.querySelector('.projects-carousel') || document.querySelector('.projects-grid');
+        
+        // Helper: clear any accidental text selection (prevents highlighted text during animations)
+        const clearTextSelection = () => {
+            try {
+                const sel = window.getSelection && window.getSelection();
+                if (sel && typeof sel.removeAllRanges === 'function') sel.removeAllRanges();
+                // IE fallback
+                if (document.selection && typeof document.selection.empty === 'function') {
+                    document.selection.empty();
+                }
+            } catch (_) {}
+        };
         
         // Respect prefers-reduced-motion
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -385,6 +389,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update button active state IMMEDIATELY so UI reflects user's choice
                 filterButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
+                // Clear any text selection caused by rapid clicks
+                clearTextSelection();
                 
                 // Store reference to the button for use in async function
                 const clickedButton = this;
@@ -392,6 +398,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 runFilterTransition(async () => {
                     // Suspend snapping and interactions during animation
                     const restoreSnap = suspendScrollSnap(grid);
+                    // Also clear selection at animation start
+                    clearTextSelection();
                     const startScrollLeft = grid ? grid.scrollLeft : 0;
                     // Capture the abort signal for this specific transition
                     // This ensures we check the correct abort signal even if a new transition starts
@@ -790,6 +798,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (signal?.aborted) return;
                     
                     finalizeStateAndRefreshCache(grid, latestFilter, myRunId);
+                    // Clear selection at the end too
+                    clearTextSelection();
                     if (projectsCarousel && typeof updateArrowStates === 'function') {
                         updateArrowStates();
                     }
@@ -948,6 +958,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Remove overlay after styles are restored
                         requestAnimationFrame(() => {
+                            // Clear any text selection and blur focused elements to avoid highlight
+                            try {
+                                const sel = window.getSelection && window.getSelection();
+                                if (sel && sel.removeAllRanges) sel.removeAllRanges();
+                            } catch (_) {}
+                            try {
+                                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                                    document.activeElement.blur();
+                                }
+                                const gridEl = document.getElementById('projectsGrid');
+                                if (gridEl && typeof gridEl.blur === 'function') gridEl.blur();
+                            } catch (_) {}
                             if (currentModal && currentModal.parentNode) {
                                 currentModal.parentNode.removeChild(currentModal);
                             }
@@ -957,6 +979,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     });
                 } else {
+                    // Clear any text selection and blur focused elements to avoid highlight
+                    try {
+                        const sel = window.getSelection && window.getSelection();
+                        if (sel && sel.removeAllRanges) sel.removeAllRanges();
+                    } catch (_) {}
+                    try {
+                        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                            document.activeElement.blur();
+                        }
+                        const gridEl = document.getElementById('projectsGrid');
+                        if (gridEl && typeof gridEl.blur === 'function') gridEl.blur();
+                    } catch (_) {}
                     currentModal = null;
                 }
             }, 300); // Wait for fade-out animation (shorter than full animation)

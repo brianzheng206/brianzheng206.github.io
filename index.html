@@ -136,7 +136,7 @@
                 <button class="filter-btn active" data-filter="all">All</button>
                 <button class="filter-btn" data-filter="ai">AI/ML</button>
                 <button class="filter-btn" data-filter="robotics">Robotics</button>
-                <button class="filter-btn" data-filter="frontend">Frontend</button>
+                <button class="filter-btn" data-filter="fullstack">Fullstack</button>
                 <button class="filter-btn" data-filter="other">Other</button>
             </div>
 
@@ -255,12 +255,12 @@
                 </article>
 
                 <!-- ASCII Cube Matrix Visualization -->
-                <article class="project-card" data-category="frontend" data-iframe="ascii-cube-matrix.html">
+                <article class="project-card" data-category="other" data-iframe="ascii-cube-matrix.html">
                     <div class="project-image">
                         <img src="assets/images/projects/ascii_cube.png" alt="ASCII Cube Matrix">
                         <div class="project-overlay">
                             <div class="project-links">
-                                <a href="ascii-cube-matrix.html" class="project-link" target="_blank" aria-label="Open"><i class="fas fa-external-link-alt"></i></a>
+                                <button class="project-cta-btn project-link" aria-label="Open ASCII Cube">Click Me!</button>
                             </div>
                         </div>
                     </div>
@@ -287,12 +287,12 @@
                 </article>
 
                 <!-- Fourier Series Visualization -->
-                <article class="project-card" data-category="frontend" data-iframe="fourier-visualization.html">
+                <article class="project-card" data-category="other" data-iframe="fourier-visualization.html">
                     <div class="project-image">
-                        <img src="assets/images/projects/fourier-viz.jpg" alt="Fourier Series Visualization">
+                        <img src="assets/images/projects/fourier.png" alt="Fourier Series Visualization">
                         <div class="project-overlay">
                             <div class="project-links">
-                                <a href="fourier-visualization.html" class="project-link" target="_blank" aria-label="Open"><i class="fas fa-external-link-alt"></i></a>
+                                <button class="project-cta-btn project-link" aria-label="Open Fourier Visualization">Click Me!</button>
                             </div>
                         </div>
                     </div>
@@ -581,25 +581,30 @@
                         <p>At WATonomous, I lead a team of 40+ members developing an autonomous Kia EV, focusing on sensor fusion, 3D object detection, and path planning. My work spans the full autonomy stack—from low-level sensor drivers to high-level AI inference and control algorithms.</p>
                         <p>I'm passionate about building intelligent systems that bridge the gap between perception, planning, and control. Whether it's optimizing YOLOv8 models with TensorRT, implementing Structure-from-Motion for 3D reconstruction, or developing real-time multi-camera stitching with GStreamer, I love tackling challenging problems in robotics and computer vision.</p>
                     </div>
-                    
-                    <div class="interests">
-                        <h3>Core Interests & Specialties</h3>
-                        <ul class="interest-list">
-                            <li><i class="fas fa-eye"></i> 3D Object Detection & Tracking</li>
-                            <li><i class="fas fa-brain"></i> Deep Learning & Model Optimization</li>
-                            <li><i class="fas fa-project-diagram"></i> Sensor Fusion (LiDAR, Camera, Radar)</li>
-                            <li><i class="fas fa-robot"></i> Autonomous Navigation & Control</li>
-                            <li><i class="fas fa-video"></i> Real-Time Computer Vision Pipelines</li>
-                            <li><i class="fas fa-microchip"></i> GPU Acceleration (CUDA, TensorRT)</li>
-                        </ul>
-                    </div>
-
-                    <div class="personal-touch">
-                        <p><strong>Currently:</strong> Working on autonomous systems at enVgo and leading perception development at WATonomous. Always excited to collaborate on robotics, computer vision, or AI projects!</p>
-                    </div>
                 </div>
                 <div class="about-image">
-                    <img src="assets/images/profile/workspace.jpg" alt="Workspace">
+                    <div id="aboutWorkspaceSlideshow" class="workspace-slideshow" data-interval="4500" data-images="assets/images/workspace/avril2.jpg,assets/images/workspace/makeuoft.jpg">
+                        <!-- Initial slides (you can add more images to data-images) -->
+                        <img class="workspace-slide" src="assets/images/workspace/avril2.jpg" alt="Workspace photo 1">
+                        <img class="workspace-slide" src="assets/images/workspace/makeuoft.jpg" alt="Workspace photo 2">
+                        <button class="workspace-nav prev" aria-label="Previous image"><i class="fas fa-chevron-left"></i></button>
+                        <button class="workspace-nav next" aria-label="Next image"><i class="fas fa-chevron-right"></i></button>
+                        <div class="workspace-dots" aria-label="Slideshow navigation"></div>
+                    </div>
+                </div>
+                <div class="interests">
+                    <h3>Core Interests & Specialties</h3>
+                    <ul class="interest-list">
+                        <li><i class="fas fa-eye"></i> 3D Object Detection & Tracking</li>
+                        <li><i class="fas fa-brain"></i> Deep Learning & Model Optimization</li>
+                        <li><i class="fas fa-project-diagram"></i> Sensor Fusion (LiDAR, Camera, Radar)</li>
+                        <li><i class="fas fa-robot"></i> Autonomous Navigation & Control</li>
+                        <li><i class="fas fa-video"></i> Real-Time Computer Vision Pipelines</li>
+                        <li><i class="fas fa-microchip"></i> GPU Acceleration (CUDA, TensorRT)</li>
+                    </ul>
+                </div>
+                <div class="personal-touch">
+                    <p><strong>Currently:</strong> Working on autonomous systems at enVgo and leading perception development at WATonomous. Always excited to collaborate on robotics, computer vision, or AI projects!</p>
                 </div>
             </div>
         </div>
@@ -745,10 +750,10 @@
     <script src="assets/js/main.js"></script>
     <script src="assets/js/navigation.js"></script>
     <script src="assets/js/projects.js"></script>
+    <script src="assets/js/about.js"></script>
     <script src="assets/js/contact.js"></script>
     <!-- Animation scripts -->
     <script src="assets/js/animations/fourier-animation.js"></script>
     <script src="assets/js/animations/nav-cube-animation.js"></script>
 </body>
 </html>
-

@@ -104,6 +104,20 @@ body {
     padding: 0;
 }
 
+/* Hide global page scrollbar but keep scrolling functional */
+html, body {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none;    /* Firefox */
+}
+
+/* Chrome, Safari, Opera */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
 /* ========================================
    TYPOGRAPHY
    ======================================== */
@@ -191,6 +205,7 @@ section {
 /* Distinct section backgrounds for visual separation */
 #projects {
     background-color: rgba(55, 44, 41, 0.4);
+    padding: calc(var(--spacing-3xl) * 1.5) 0;
 }
 
 #achievements {
@@ -1344,4 +1359,3 @@ section {
         grid-template-columns: repeat(2, 1fr);
     }
 }
-
