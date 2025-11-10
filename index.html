@@ -11,7 +11,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://brianzheng.com/">
     <meta property="og:title" content="Brian Zheng - Autonomy Software Developer & Mechatronics Engineer">
-    <meta property="og:description" content="Just a guy hungry for knowledge. I build intelligent autonomous systems through AI and robotics.">
+    <meta property="og:description" content="I build intelligent autonomous systems through AI and robotics.">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
@@ -27,6 +27,8 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/components.css">
+    <!-- AOS (Animate On Scroll) styles -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -324,7 +326,7 @@
                 </button>
             </div>
             <!-- Carousel Slider Indicator -->
-            <div class="carousel-slider-container">
+            <div class="carousel-slider-container" data-aos="fade" data-aos-duration="700" data-aos-offset="140" data-aos-anchor-placement="top-bottom">
                 <div class="carousel-slider-track">
                     <div class="carousel-slider-thumb" id="carouselSliderThumb"></div>
                 </div>
@@ -615,7 +617,7 @@
     <section id="blog" class="blog">
         <div class="container">
             <h2 class="section-title">Blog & Writing</h2>
-            <p class="section-subtitle">Thoughts on projects, engineering, and technology</p>
+            <p class="section-subtitle">Thoughts on projects, engineering, and technology (still in progress)</p>
 
             <div class="blog-grid">
                 <article class="blog-card">
@@ -639,7 +641,7 @@
                     </div>
                     <div class="blog-content">
                         <span class="blog-date">December 2024</span>
-                        <h3 class="blog-title">Improving LiDAR–Camera Fusion in ROS 2</h3>
+                        <h3 class="blog-title">Implementing LiDAR–Camera Fusion in ROS2</h3>
                         <p class="blog-excerpt">Exploring techniques for better sensor fusion between LiDAR and camera data in ROS 2, including calibration methods and real-time processing optimizations.</p>
                         <div class="blog-meta">
                             <span class="blog-reading-time">8 min read</span>
@@ -752,6 +754,9 @@
     <script src="assets/js/projects.js"></script>
     <script src="assets/js/about.js"></script>
     <script src="assets/js/contact.js"></script>
+    <!-- AOS (Animate On Scroll) -->
+    <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+    <script src="assets/js/scroll-animations.js"></script>
     <!-- Animation scripts -->
     <script src="assets/js/animations/fourier-animation.js"></script>
     <script src="assets/js/animations/nav-cube-animation.js"></script>

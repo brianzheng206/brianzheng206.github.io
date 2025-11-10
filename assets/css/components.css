@@ -6,6 +6,20 @@
     background-color: var(--bg-secondary);
 }
 
+/* Suppress AOS transitions briefly when closing the project modal to avoid unintended replays */
+body.aos-suppress #projects [data-aos] {
+    transition-duration: 0s !important;
+    -webkit-transition-duration: 0s !important;
+    animation-duration: 0s !important;
+}
+
+/* Gate: prevent filter buttons from animating unless explicitly allowed */
+body.aos-buttons-gated #projects .filter-btn[data-aos] {
+    transition-duration: 0s !important;
+    -webkit-transition-duration: 0s !important;
+    animation-duration: 0s !important;
+}
+
 .project-filters {
     display: flex;
     justify-content: center;
@@ -37,34 +51,40 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-lg);
-    margin: var(--spacing-2xl) 0;
+    /* Bring the slider closer by reducing bottom spacing */
+    margin: var(--spacing-xl) 0 var(--spacing-md);
     width: 100%;
     box-sizing: border-box;
-    /* Avoid propagating wheel/overscroll to the document */
-    overscroll-behavior: contain;
+    padding: 0 calc(var(--spacing-3xl) + 4rem); /* Increased horizontal padding to make scrollbar shorter */
+    /* Allow normal page scrolling */
+    overscroll-behavior: auto;
+    /* Prevent wrapper from creating its own scrollbar */
+    overflow: hidden;
 }
 
 .carousel-slider-container {
-    margin-top: var(--spacing-xl);
-    display: flex;
+    /* Move slider higher/closer to the carousel */
+    margin-top: 0;
+    display: flex; /* Show custom slider for a minimal scrollbar */
     justify-content: center;
     align-items: center;
 }
 
 .carousel-slider-track {
     width: 100%;
-    max-width: 600px;
-    height: 8px;
-    background-color: var(--bg-secondary);
-    border-radius: 4px;
+    max-width: 480px; /* Keep slider compact so it isn't too long */
+    height: 10px; /* Thicker slider as requested */
+    background-color: rgba(110, 92, 84, 0.35); /* Higher contrast track */
+    border-radius: 9999px;
     position: relative;
     cursor: pointer;
     overflow: visible;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: inset 0 0 0 1px rgba(110, 92, 84, 0.45); /* subtle outline for visibility */
 }
 
 .carousel-slider-track:hover {
-    background-color: rgba(110, 92, 84, 0.3);
+    background-color: rgba(110, 92, 84, 0.5);
 }
 
 .carousel-slider-thumb {
@@ -72,15 +92,15 @@
     left: 0;
     top: 0;
     height: 100%;
-    background: linear-gradient(135deg, var(--color-lightest) 0%, rgba(138, 122, 114, 0.9) 100%);
-    border-radius: 4px;
+    background: linear-gradient(135deg, var(--color-lightest) 0%, rgba(138, 122, 114, 1) 100%); /* stronger thumb */
+    border-radius: 9999px; /* Pill-shaped thumb */
     min-width: 20px;
     transform: translateX(0);
     transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                 box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
                 background 0.2s ease;
     /* No transition on transform for instant sync */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28); /* more visible */
     will-change: transform, width;
 }
 
@@ -111,29 +131,35 @@
     overflow-y: hidden;
     scroll-behavior: smooth;
     scroll-snap-type: x proximity;
-    /* Prevent scroll chaining to the page while interacting with the carousel */
-    overscroll-behavior: contain;
+    /* Allow normal page scrolling */
+    overscroll-behavior: auto;
+    /* Hide native scrollbar; use custom minimal slider below */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
     flex: 1;
+    max-width: calc(100% - 12rem); /* Further constrain width to make scrollbar shorter */
     padding: var(--spacing-md) 0;
+    /* Reduce inner bottom padding since we use a custom slider below */
     padding-bottom: var(--spacing-md);
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     will-change: scroll-position;
-    /* Prevent scrollbar popping when height changes */
-    scrollbar-gutter: stable both-edges;
-    /* Prevent height changes during filtering; match card height (540px) */
+    /* Prevent scrollbar popping when height changes - removed scrollbar-gutter to avoid duplicate appearance */
+    /* Prevent height changes during filtering; match card height */
     min-height: 540px;
     align-items: stretch;
     /* Isolate layout/paint for smoother filter animations (avoid size to prevent clipping) */
-    contain: layout paint;
+    /* Removed 'contain' to allow scrollbar interaction */
     isolation: isolate;
     /* Prevent anchor-based scroll adjustments that can cause jitter */
     overflow-anchor: none;
+    /* Ensure scrollbar is interactive */
+    pointer-events: auto;
 }
 
+/* Hide native scrollbar in WebKit browsers */
 .projects-carousel::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
+    height: 0;
+    width: 0;
 }
 
 /* While filtering, disable snapping and pointer interactions to avoid jank */
@@ -167,12 +193,14 @@
     display: flex;
     gap: var(--spacing-2xl);
     /* Strong compositing hints for smooth animations */
-    scrollbar-gutter: stable both-edges;
+    /* Removed scrollbar-gutter to avoid duplicate scrollbar appearance */
     contain: layout paint size;
     isolation: isolate;
     /* Prevent height changes during filtering */
-    min-height: 450px;
+    min-height: 520px;
     align-items: stretch;
+    /* Ensure no duplicate scrollbar - this class is used as an ID selector */
+    overflow: visible;
 }
 
 /* Cards become fixed-width items in the horizontal strip */
@@ -196,7 +224,7 @@
     will-change: transform, opacity;
     contain: layout paint;
     /* Fixed height for consistent sizing */
-    height: 520px;
+    height: 600px;
 }
 
 /* When we mark items as "exiting", let them ignore clicks while fading */
@@ -545,7 +573,7 @@
     border-radius: 50%;
     width: 50px;
     height: 50px;
-    display: flex;
+    display: flex; /* Show carousel arrows */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -840,7 +868,7 @@
 }
 
 .personal-touch {
-    margin-top: var(--spacing-xs);
+    margin-top: calc(-1 * var(--spacing-3xl) + var(--spacing-xl));
     padding: var(--spacing-lg);
     background-color: var(--bg-card);
     border-radius: 8px;
@@ -1319,7 +1347,8 @@
 
 .timeline-icon {
     position: absolute;
-    left: calc(-1 * var(--spacing-2xl) - 12px);
+    /* Center the 40px icon on the 2px line at left:0 (padding-left: 3rem) → -3rem - 19px */
+    left: calc(-1 * var(--spacing-2xl) - 19px);
     width: 40px;
     height: 40px;
     background-color: var(--color-lightest);
@@ -1835,6 +1864,7 @@
         flex-direction: column;
         gap: var(--spacing-md);
         margin: var(--spacing-xl) 0;
+        padding: 0; /* Remove horizontal padding on mobile */
     }
     
     .carousel-arrow {
@@ -1946,7 +1976,8 @@
     }
     
     .timeline-icon {
-        left: calc(-1 * var(--spacing-lg) - 12px);
+        /* Center 30px icon on line at left: var(--spacing-sm); padding-left: var(--spacing-lg) */
+        left: calc(var(--spacing-sm) - var(--spacing-lg) - 14px);
         width: 30px;
         height: 30px;
         font-size: var(--font-size-sm);

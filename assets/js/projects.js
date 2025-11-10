@@ -20,6 +20,20 @@ document.addEventListener('DOMContentLoaded', function() {
     let updateArrowStates = null; // Declare at outer scope for filter code access
     
     if (projectsCarousel && carouselLeft && carouselRight) {
+        // Lock carousel width during initial AOS reveal to prevent jitter
+        try {
+            const initialWidth = projectsCarousel.clientWidth;
+            if (initialWidth && !projectsCarousel.dataset.widthLocked) {
+                projectsCarousel.style.width = initialWidth + 'px';
+                projectsCarousel.dataset.widthLocked = 'true';
+                // Unlock shortly after animations complete
+                setTimeout(() => {
+                    projectsCarousel.style.width = '';
+                    delete projectsCarousel.dataset.widthLocked;
+                }, 1400);
+            }
+        } catch (_) {}
+
         const scrollAmount = 500; // Pixels to scroll per click
         
         // --- Define updateArrowStates once at top of block ---
@@ -78,6 +92,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // --- wheel → force horizontal-only scroll while hovering ---
+        // DISABLED: Removed scroll lock to allow normal page scrolling
+        /*
         const handleWheelToHorizontal = (e) => {
             // Allow pinch-zoom or Ctrl+wheel
             if (e.ctrlKey) return;
@@ -102,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (carouselWrapper) {
             carouselWrapper.addEventListener('wheel', handleWheelToHorizontal, { passive: false });
         }
+        */
         
         // Also keep arrow-state in sync
         projectsCarousel.addEventListener('scroll', updateArrowStates);
@@ -164,6 +181,84 @@ document.addEventListener('DOMContentLoaded', function() {
                     behavior: 'smooth'
                 });
             });
+            // Slider thumb drag-to-scroll
+            const sliderThumb = document.getElementById('carouselSliderThumb');
+            if (sliderThumb) {
+                let isDragging = false;
+                let dragStartX = 0;
+                let startLeft = 0;
+
+                const onMouseMove = (e) => {
+                    if (!isDragging) return;
+                    const { scrollWidth, clientWidth } = projectsCarousel;
+                    const trackWidth = sliderTrack.offsetWidth;
+                    const thumbWidth = Math.max(20, trackWidth * (clientWidth / scrollWidth));
+                    const maxLeft = Math.max(0, trackWidth - thumbWidth);
+                    const dx = e.clientX - dragStartX;
+                    const newLeft = Math.max(0, Math.min(maxLeft, startLeft + dx));
+                    const scrollPct = maxLeft > 0 ? newLeft / maxLeft : 0;
+                    projectsCarousel.scrollLeft = scrollPct * (scrollWidth - clientWidth);
+                };
+
+                const endDrag = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', endDrag);
+                    document.body.style.userSelect = '';
+                    sliderThumb.classList.remove('active');
+                };
+
+                sliderThumb.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    dragStartX = e.clientX;
+                    // Parse current translateX from style var if present
+                    const currentTransform = sliderThumb.style.transform || 'translateX(0px)';
+                    const match = currentTransform.match(/translateX\(([-\d.]+)px\)/);
+                    startLeft = match ? parseFloat(match[1]) : 0;
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', endDrag);
+                    document.body.style.userSelect = 'none';
+                    sliderThumb.classList.add('active');
+                });
+
+                // Touch support for thumb dragging
+                const onTouchMove = (e) => {
+                    if (!isDragging) return;
+                    const touch = e.touches[0];
+                    if (!touch) return;
+                    const { scrollWidth, clientWidth } = projectsCarousel;
+                    const trackWidth = sliderTrack.offsetWidth;
+                    const thumbWidth = Math.max(20, trackWidth * (clientWidth / scrollWidth));
+                    const maxLeft = Math.max(0, trackWidth - thumbWidth);
+                    const dx = touch.clientX - dragStartX;
+                    const newLeft = Math.max(0, Math.min(maxLeft, startLeft + dx));
+                    const scrollPct = maxLeft > 0 ? newLeft / maxLeft : 0;
+                    projectsCarousel.scrollLeft = scrollPct * (scrollWidth - clientWidth);
+                };
+
+                const endTouch = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    document.removeEventListener('touchmove', onTouchMove);
+                    document.removeEventListener('touchend', endTouch);
+                    sliderThumb.classList.remove('active');
+                };
+
+                sliderThumb.addEventListener('touchstart', (e) => {
+                    const touch = e.touches[0];
+                    if (!touch) return;
+                    isDragging = true;
+                    dragStartX = touch.clientX;
+                    const currentTransform = sliderThumb.style.transform || 'translateX(0px)';
+                    const match = currentTransform.match(/translateX\(([-\d.]+)px\)/);
+                    startLeft = match ? parseFloat(match[1]) : 0;
+                    document.addEventListener('touchmove', onTouchMove, { passive: true });
+                    document.addEventListener('touchend', endTouch, { passive: true });
+                    sliderThumb.classList.add('active');
+                }, { passive: true });
+            }
         }
         
         // Initial state
@@ -798,6 +893,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (signal?.aborted) return;
                     
                     finalizeStateAndRefreshCache(grid, latestFilter, myRunId);
+                    // Recompute scroll animation offsets after layout change
+                    try { if (window.AOS && typeof window.AOS.refresh === 'function') window.AOS.refresh(); } catch(_){}
                     // Clear selection at the end too
                     clearTextSelection();
                     if (projectsCarousel && typeof updateArrowStates === 'function') {
@@ -820,11 +917,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Initialize project card styles (NO transitions - WAAPI handles all animations)
-    projectCards.forEach((card, index) => {
-        card.style.opacity = '1';
-        card.style.transform = 'translate3d(0, 0, 0) scale(1)';
-    });
+    // Allow AOS to control initial reveal animations for project cards
     
     // Seed the rect cache
     projectCards.forEach(card => {
@@ -921,6 +1014,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close modal
     function closeProjectModal() {
         if (currentModal) {
+            // Temporarily suppress AOS animations in the Projects section
+            document.body.classList.add('aos-suppress');
             // Get stored scroll position before removing modal
             const scrollY = currentModal.dataset.scrollY ? parseInt(currentModal.dataset.scrollY, 10) : 0;
             
@@ -976,6 +1071,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Restore original scroll behavior
                             html.style.scrollBehavior = originalScrollBehavior || '';
                             currentModal = null;
+                            // Remove AOS suppression shortly after close
+                            setTimeout(() => {
+                                document.body.classList.remove('aos-suppress');
+                            }, 150);
                         });
                     });
                 } else {
@@ -992,6 +1091,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (gridEl && typeof gridEl.blur === 'function') gridEl.blur();
                     } catch (_) {}
                     currentModal = null;
+                    // Ensure suppression is lifted even if overlay was already gone
+                    setTimeout(() => {
+                        document.body.classList.remove('aos-suppress');
+                    }, 150);
                 }
             }, 300); // Wait for fade-out animation (shorter than full animation)
         }
