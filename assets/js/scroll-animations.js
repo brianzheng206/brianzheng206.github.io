@@ -50,6 +50,12 @@
     setAOSAttributes('.awards-section h3', 'fade-up', { duration: 700, offset: 120 });
     setAOSAttributes('.award-card', 'zoom-in', { duration: 600, offset: 120, delayBase: 60, stagger: 60 });
 
+    // About section - text content
+    setAOSAttributes('.bio p', 'fade-up', { duration: 700, offset: 140, delayBase: 100, stagger: 100 });
+    setAOSAttributes('.interests', 'fade-up', { duration: 700, offset: 140, delayBase: 200 });
+    setAOSAttributes('.interest-list li', 'fade-left', { duration: 600, offset: 120, delayBase: 50, stagger: 60 });
+    setAOSAttributes('.personal-touch', 'fade-up', { duration: 700, offset: 140, delayBase: 300 });
+    
     // About workspace slideshow
     setAOSAttributes('#aboutWorkspaceSlideshow', 'fade-up', { duration: 800, offset: 160 });
 
