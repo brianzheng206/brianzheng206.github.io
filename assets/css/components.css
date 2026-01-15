@@ -55,7 +55,7 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     margin: var(--spacing-xl) 0 var(--spacing-md);
     width: 100%;
     box-sizing: border-box;
-    padding: 0 calc(var(--spacing-3xl) + 4rem); /* Increased horizontal padding to make scrollbar shorter */
+    padding: 0 var(--spacing-3xl); /* Reduced padding to fit 3 cards */
     /* Allow normal page scrolling */
     overscroll-behavior: auto;
     /* Prevent wrapper from creating its own scrollbar */
@@ -137,7 +137,8 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
     flex: 1;
-    max-width: calc(100% - 12rem); /* Further constrain width to make scrollbar shorter */
+    width: calc(3 * 380px + 2 * var(--spacing-2xl)); /* Exactly 3 cards + 2 gaps = 1140 + 96 = 1236px */
+    min-width: calc(3 * 380px + 2 * var(--spacing-2xl));
     padding: var(--spacing-md) 0;
     /* Reduce inner bottom padding since we use a custom slider below */
     padding-bottom: var(--spacing-md);
@@ -145,7 +146,7 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     will-change: scroll-position;
     /* Prevent scrollbar popping when height changes - removed scrollbar-gutter to avoid duplicate appearance */
     /* Prevent height changes during filtering; match card height */
-    min-height: 540px;
+    min-height: 500px;
     align-items: stretch;
     /* Isolate layout/paint for smoother filter animations (avoid size to prevent clipping) */
     /* Removed 'contain' to allow scrollbar interaction */
@@ -212,8 +213,8 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     scroll-snap-align: start;
     scroll-snap-stop: always;
     border: 1px solid var(--border-color);
-    flex: 0 0 400px; /* Fixed width for horizontal strip - scaled up from 380px */
-    width: 400px;
+    flex: 0 0 380px; /* Fixed width to show 3 full cards */
+    width: 380px;
     max-width: calc(100vw - 2rem);
     display: flex;
     flex-direction: column;
@@ -224,7 +225,7 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     will-change: transform, opacity;
     contain: layout paint;
     /* Fixed height for consistent sizing */
-    height: 600px;
+    height: 500px;
 }
 
 /* When we mark items as "exiting", let them ignore clicks while fading */
