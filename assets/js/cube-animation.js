@@ -15,8 +15,8 @@ class FourierImageAnimation {
         this.canvas.width = this.width;
         this.canvas.height = this.height;
         
-        this.colors = ['#6e5c54', '#584e49', '#4b3f3a'];
-        this.bgColor = '#372c29';
+        this.colors = ['#63b3ed', '#4299e1', '#3182ce'];
+        this.bgColor = '#0a0f14';
         
         this.centerX = this.width / 2;
         this.centerY = this.height / 2;

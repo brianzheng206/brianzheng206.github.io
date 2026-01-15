@@ -9,29 +9,29 @@
 }
 
 :root {
-    /* Color Palette - Brown/Taupe Theme */
-    --color-lightest: #6e5c54;  /* Lightest brown - for accents */
-    --color-medium-dark: #584e49;  /* Medium-dark brown - for cards */
-    --color-medium: #4b3f3a;  /* Medium brown - for borders, secondary elements */
-    --color-dark: #3d332d;  /* Dark brown - for sections */
-    --color-darkest: #372c29;  /* Darkest brown - for main background */
+    /* Color Palette - Sleek Black Theme */
+    --color-lightest: #e8e6e4;  /* Off-white - for accents and highlights */
+    --color-medium-dark: #1a1a1a;  /* Very dark grey - for cards */
+    --color-medium: #0f0f0f;  /* Near black - for borders, secondary elements */
+    --color-dark: #0a0a0a;  /* Almost black - for sections */
+    --color-darkest: #000000;  /* Pure black - for main background */
     
     /* Colors */
-    --primary-color: #6e5c54;
-    --primary-dark: #4b3f3a;
-    --primary-light: #7a6b63;
-    --secondary-color: #584e49;
-    --accent-color: #6e5c54;
-    --text-primary: #ffffff;
-    --text-secondary: #e8e6e4;
-    --text-light: #c9c5c2;
-    --bg-primary: #372c29;
-    --bg-secondary: #3d332d;
-    --bg-tertiary: #4b3f3a;
-    --bg-card: #584e49;
-    --bg-dark: #3d332d;
-    --border-color: #4b3f3a;
-    --border-light: #6e5c54;
+    --primary-color: #e8e6e4;
+    --primary-dark: #1a1a1a;
+    --primary-light: #f5f5f5;
+    --secondary-color: #2a2a2a;
+    --accent-color: #e8e6e4;
+    --text-primary: #e8e6e4;
+    --text-secondary: #e0e0e0;
+    --text-light: #b0b0b0;
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #111111;
+    --bg-card: #1a1a1a;
+    --bg-dark: #0a0a0a;
+    --border-color: #2a2a2a;
+    --border-light: #404040;
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
@@ -204,32 +204,28 @@ section {
 
 /* Distinct section backgrounds for visual separation */
 #projects {
-    background-color: rgba(55, 44, 41, 0.4);
+    background-color: rgba(15, 20, 25, 0.8);
     padding: calc(var(--spacing-3xl) * 1.5) 0;
 }
 
 #achievements {
-    background-color: rgba(75, 63, 58, 0.5);
+    background-color: rgba(26, 32, 44, 0.7);
 }
 
 #skills {
-    background-color: rgba(61, 51, 45, 0.4);
-}
-
-#resume {
-    background-color: rgba(55, 44, 41, 0.6);
+    background-color: rgba(15, 20, 25, 0.8);
 }
 
 #about {
-    background-color: rgba(75, 63, 58, 0.4);
+    background-color: rgba(26, 32, 44, 0.6);
 }
 
 #blog {
-    background-color: rgba(61, 51, 45, 0.5);
+    background-color: rgba(15, 20, 25, 0.9);
 }
 
 #contact {
-    background-color: rgba(55, 44, 41, 0.5);
+    background-color: rgba(26, 32, 44, 0.8);
 }
 
 .section-title {
@@ -258,7 +254,7 @@ section {
     left: 0;
     right: 0;
     height: var(--nav-height);
-    background-color: rgba(61, 51, 45, 0.95);
+    background-color: rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(10px);
     box-shadow: var(--shadow-sm);
     z-index: 1000;
@@ -374,39 +370,45 @@ section {
 }
 
 .btn-primary {
-    background-color: var(--color-lightest);
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
     color: var(--text-primary);
+    border: 2px solid var(--border-light);
 }
 
 .btn-primary:hover {
-    background-color: var(--primary-light);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
     color: var(--text-primary);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    border-color: var(--accent-color);
 }
 
 .btn-secondary {
-    background-color: var(--color-medium);
+    background-color: var(--bg-card);
     color: var(--text-primary);
+    border: 2px solid var(--border-light);
 }
 
 .btn-secondary:hover {
-    background-color: var(--color-medium-dark);
-    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
 .btn-outline {
     background-color: transparent;
-    color: var(--text-secondary);
-    border: 2px solid var(--border-light);
+    color: var(--accent-color);
+    border: 2px solid var(--accent-color);
 }
 
 .btn-outline:hover {
-    background-color: var(--color-medium);
+    background-color: var(--bg-card);
     color: var(--text-primary);
-    border-color: var(--color-lightest);
+    border-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
 
 /* ========================================
@@ -441,7 +443,7 @@ section {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(55,44,41,0.3) 0%, rgba(61,51,45,0.3) 50%, rgba(75,63,58,0.3) 100%);
+    background: linear-gradient(135deg, rgba(10,15,20,0.5) 0%, rgba(15,20,25,0.5) 50%, rgba(26,32,44,0.5) 100%);
     opacity: 1;
     z-index: 1;
     pointer-events: none;
@@ -527,7 +529,7 @@ section {
     top: calc(var(--nav-height) + var(--spacing-md));
     left: var(--spacing-lg);
     z-index: 5;
-    background-color: rgba(61, 51, 45, 0.95);
+    background-color: rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(15px);
     border-radius: 12px;
     border: 1px solid var(--border-color);
@@ -577,11 +579,11 @@ section {
 }
 
 .shape-selector-header:hover {
-    background-color: rgba(110, 92, 84, 0.2);
+    background-color: rgba(99, 179, 237, 0.1);
 }
 
 .shape-selector-header:active {
-    background-color: rgba(110, 92, 84, 0.3);
+    background-color: rgba(99, 179, 237, 0.15);
 }
 
 .shape-selector-icon {
@@ -709,7 +711,7 @@ section {
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(110, 92, 84, 0.2);
+    background: rgba(99, 179, 237, 0.1);
     transform: translate(-50%, -50%);
     transition: width 0.4s ease, height 0.4s ease;
     z-index: 0;
@@ -735,15 +737,15 @@ section {
 }
 
 .shape-btn.active {
-    background: linear-gradient(135deg, var(--color-lightest), rgba(110, 92, 84, 0.8));
+    background: linear-gradient(135deg, var(--color-lightest), rgba(255, 255, 255, 0.9));
     color: var(--text-primary);
     border-color: var(--color-lightest);
-    box-shadow: 0 4px 16px rgba(110, 92, 84, 0.4);
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.2);
     font-weight: 600;
 }
 
 .shape-btn.active::before {
-    background: rgba(110, 92, 84, 0.3);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .shape-icon {
@@ -913,7 +915,7 @@ section {
 
 .shape-btn:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(110, 92, 84, 0.3);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
 @keyframes fadeInUp {

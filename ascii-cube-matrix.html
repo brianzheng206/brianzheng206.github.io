@@ -15,9 +15,9 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #372c29;
+            background-color: #000000;
             font-family: 'Courier New', monospace;
-            color: #6e5c54;
+            color: #ffffff;
             height: 100vh;
             cursor: grab;
         }
@@ -35,7 +35,7 @@
 
         #canvas {
             display: block;
-            background-color: #372c29;
+            background-color: #000000;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             margin: 0 auto;
@@ -45,11 +45,11 @@
             position: fixed;
             top: 20px;
             left: 20px;
-            color: #6e5c54;
-            background-color: rgba(55, 44, 41, 0.8);
+            color: #f7fafc;
+            background-color: rgba(10, 15, 20, 0.9);
             padding: 15px 20px;
             border-radius: 8px;
-            border: 1px solid rgba(110, 92, 84, 0.3);
+            border: 1px solid rgba(74, 85, 104, 0.5);
             font-size: 14px;
             line-height: 1.6;
             z-index: 1000;
@@ -58,14 +58,14 @@
         }
 
         .info h1 {
-            color: #6e5c54;
+            color: #f7fafc;
             font-size: 18px;
             margin-bottom: 10px;
             font-weight: 600;
         }
 
         .info p {
-            color: #8a7a72;
+            color: #cbd5e0;
             font-size: 12px;
             margin-bottom: 5px;
         }
@@ -74,24 +74,24 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            color: #6e5c54;
-            background-color: rgba(55, 44, 41, 0.8);
+            color: #f7fafc;
+            background-color: rgba(10, 15, 20, 0.9);
             padding: 10px 15px;
             border-radius: 8px;
-            border: 1px solid rgba(110, 92, 84, 0.3);
+            border: 1px solid rgba(74, 85, 104, 0.5);
             font-size: 11px;
             z-index: 1000;
             backdrop-filter: blur(10px);
         }
 
         .attribution a {
-            color: #8a7a72;
+            color: #cbd5e0;
             text-decoration: none;
             transition: color 0.2s;
         }
 
         .attribution a:hover {
-            color: #6e5c54;
+            color: #63b3ed;
             text-decoration: underline;
         }
 
@@ -226,14 +226,14 @@
                 
                 // Colors matching website theme
                 this.colors = {
-                    background: '#372c29',
-                    text: '#6e5c54',
-                    textSecondary: '#8a7a72',
-                    textTertiary: '#584e49'
+                    background: '#0a0f14',
+                    text: '#f7fafc',
+                    textSecondary: '#cbd5e0',
+                    textTertiary: '#a0aec0'
                 };
-                
+
                 // Make text slightly brighter for better visibility
-                this.textColor = '#8a7a72';
+                this.textColor = '#cbd5e0';
                 
                 this.setupEventListeners();
                 this.animate();

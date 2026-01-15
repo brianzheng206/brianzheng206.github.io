@@ -82,13 +82,34 @@
     if (projectsSection && 'IntersectionObserver' in window) {
       let sectionWasOut = false;
       let buttonsAnimatedOnce = false;
+      let animationTimeout = null;
+      let animatedButtons = new Set();
+      let initialLoadComplete = false;
+
+      // Wait a bit after page load to ensure initial animations can start
+      setTimeout(() => {
+        initialLoadComplete = true;
+      }, 500);
 
       // After the buttons animate once initially, enable gating to prevent repeated partial replays
       document.addEventListener('aos:in', function (evt) {
         const el = (evt && (evt.detail || evt.target)) || null;
-        if (!buttonsAnimatedOnce && el && el.classList && el.classList.contains('filter-btn')) {
-          buttonsAnimatedOnce = true;
-          document.body.classList.add('aos-buttons-gated');
+        if (el && el.classList && el.classList.contains('filter-btn')) {
+          animatedButtons.add(el);
+          
+          // Only gate after initial load is complete AND all/most buttons have animated
+          if (initialLoadComplete && !buttonsAnimatedOnce) {
+            const allFilterButtons = document.querySelectorAll('.filter-btn');
+            // Wait for all buttons to animate, or at least 4 out of 5 (in case one is off-screen)
+            if (animatedButtons.size >= Math.min(allFilterButtons.length, 4)) {
+              // Delay adding the gate to ensure all buttons have a chance to complete their animations
+              if (animationTimeout) clearTimeout(animationTimeout);
+              animationTimeout = setTimeout(() => {
+                buttonsAnimatedOnce = true;
+                document.body.classList.add('aos-buttons-gated');
+              }, 2000); // Wait for all staggered animations to complete (5 buttons * 50ms stagger + 600ms duration + buffer)
+            }
+          }
         }
       });
 

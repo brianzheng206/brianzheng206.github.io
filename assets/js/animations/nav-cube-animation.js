@@ -19,7 +19,7 @@ class NavCubeAnimation {
         this.rotation = { A: 0, B: 0, C: 0 };
         this.rotationSpeed = { A: 0.02, B: 0.03, C: 0.01 };
         
-        this.colors = ['#6e5c54', '#584e49', '#4b3f3a'];
+        this.colors = ['#63b3ed', '#4299e1', '#3182ce'];
         this.bgColor = 'transparent';
         
         this.animate();
