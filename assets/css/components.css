@@ -6,11 +6,21 @@
     background-color: var(--bg-secondary);
 }
 
-/* Suppress AOS transitions briefly when closing the project modal to avoid unintended replays */
-body.aos-suppress #projects [data-aos] {
+/* Suppress AOS transitions when modal is open or closing to avoid unintended replays */
+body.aos-suppress [data-aos] {
     transition-duration: 0s !important;
     -webkit-transition-duration: 0s !important;
     animation-duration: 0s !important;
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* Prevent project cards from fading when modal opens */
+body.aos-suppress .project-card {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
 }
 
 /* Gate: prevent filter buttons from animating unless explicitly allowed */
@@ -224,8 +234,9 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     backface-visibility: hidden;
     will-change: transform, opacity;
     contain: layout paint;
-    /* Fixed height for consistent sizing */
-    height: 500px;
+    /* Auto height to fit content */
+    min-height: 500px;
+    height: auto;
 }
 
 /* When we mark items as "exiting", let them ignore clicks while fading */
@@ -302,7 +313,7 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     max-width: 700px;
     width: 100%;
     max-height: 90vh;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
@@ -317,14 +328,28 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     /* Smooth scrolling */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-    /* Hide scrollbar */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    /* Show scrollbar for better UX */
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: var(--border-color) var(--bg-secondary);
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
+/* Show scrollbar for Chrome, Safari and Opera */
 .project-modal-content::-webkit-scrollbar {
-    display: none;
+    width: 8px;
+}
+
+.project-modal-content::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.project-modal-content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.project-modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--border-light);
 }
 
 .project-modal-overlay.active .project-modal-content {
@@ -381,6 +406,8 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     overflow: visible;
     /* Allow modal card to grow to fit its content */
     height: auto;
+    min-height: auto;
+    max-height: none;
 }
 
 /* Ensure text content is fully visible in modal */
@@ -391,6 +418,8 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     overflow: visible;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .project-modal-content .project-description,
@@ -411,6 +440,13 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     -webkit-box-orient: unset !important;
     max-height: none !important;
     text-overflow: clip !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: auto !important;
+    flex: 0 0 auto !important;
+    margin-bottom: var(--spacing-md) !important;
+    color: var(--text-secondary) !important;
 }
 
 .project-modal-content .project-narrative {
@@ -421,6 +457,10 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     margin-bottom: var(--spacing-md);
     padding-right: 0;
     max-width: 100%;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: var(--text-secondary) !important;
 }
 
 .project-modal-content .project-card:hover {
@@ -727,7 +767,7 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
     min-height: 0; /* Allow flexbox to shrink */
 }
 
@@ -742,15 +782,12 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     line-height: 1.5;
 }
 
-/* Only truncate description in carousel cards, not in modal */
+/* Show full description in carousel cards */
 .projects-carousel .project-description,
 .projects-grid .project-description {
     flex: 1;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 3; /* Limit to 3 lines */
-    line-clamp: 3; /* Standard property */
-    -webkit-box-orient: vertical;
+    overflow: visible;
+    display: block;
 }
 
 .project-tech {
@@ -777,7 +814,10 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
 }
 
 .project-modal-content .project-narrative {
-    display: block;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin-top: var(--spacing-lg) !important;
 }
 
 .narrative-item {

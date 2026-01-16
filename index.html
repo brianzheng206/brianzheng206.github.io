@@ -145,6 +145,85 @@
                     <i class="fas fa-chevron-left"></i>
                 </button>
                 <div class="projects-carousel" id="projectsGrid">
+                <!-- L4 Self-Driving Car Project -->
+                <article class="project-card" data-category="ai">
+                    <div class="project-image">
+                        <img src="assets/images/projects/eve.jpg" alt="L4 Self-Driving Car">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="https://github.com/brianzheng206" class="project-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                                <a href="#" class="project-link" aria-label="Demo"><i class="fas fa-external-link-alt"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">L4 Self-Driving Car</h3>
+                        <p class="project-description">I lead the development of a Level 4 autonomous vehicle, with a strong emphasis on real-world deployment, safety, and research-grade perception. The project encompasses the full autonomy stack, including sensing, perception, localization, planning, and control, all built on ROS 2 and modern ML infrastructure.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">ROS2</span>
+                            <span class="tech-badge">TensorRT</span>
+                            <span class="tech-badge">CUDA</span>
+                            <span class="tech-badge">YOLOv8</span>
+                            <span class="tech-badge">LiDAR</span>
+                            <span class="tech-badge">BEVfusion</span>
+                            <span class="tech-badge">DBSCAN</span>
+                        </div>
+                        <div class="project-narrative">
+                            <div class="narrative-item">
+                                <strong>Multi-Sensor Fusion:</strong> Developed pipelines combining LiDAR clustering (e.g., DBSCAN) with camera-based deep learning detectors (YOLO-based) for accurate 3D bounding boxes and tracking.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>BEV Architectures:</strong> Implemented advanced deep learning models such as BEV-based architectures (e.g., BEVFusion-style networks) that transform multi-view camera and LiDAR features into a unified bird's-eye-view representation for anchor-free 3D detection.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Real-Time Tracking:</strong> Built real-time tracking systems, including joint detection-and-embedding (JDE) networks that perform detection and ReID-based tracking in a single forward pass.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Hardware Optimization:</strong> Leveraged TensorRT quantization and CUDA acceleration to meet real-time constraints on embedded automotive compute platforms.
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Isaac Sim Boat Simulation Project -->
+                <article class="project-card" data-category="ai">
+                    <div class="project-image">
+                        <img src="assets/images/projects/isaac-sim-boat.png" alt="Isaac Sim Boat Simulation">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="https://github.com/brianzheng206" class="project-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                                <a href="#" class="project-link" aria-label="Demo"><i class="fas fa-external-link-alt"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Isaac Sim Boat Simulation</h3>
+                        <p class="project-description">Create a high-fidelity simulation to mimic real-world conditions to validate perception and autonomy pipeline, and risk testing by running edge cases and dangerous scenarios safely in software.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">Isaac Sim</span>
+                            <span class="tech-badge">Ray Tracing</span>
+                            <span class="tech-badge">RTX</span>
+                            <span class="tech-badge">Physics</span>
+                            <span class="tech-badge">Sim-to-Real</span>
+                            <span class="tech-badge">Python</span>
+                        </div>
+                        <div class="project-narrative">
+                            <div class="narrative-item">
+                                <strong>Ray Tracing & RTX Rendering:</strong> Leveraged Ray Tracing and RTX rendering to mimic real lighting, reflections, and water textures for computer vision validation, specifically to verify detection algorithms against challenging specular highlights and glare.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Water Physics:</strong> Implemented water physics to simulate buoyancy, drag, and wave disturbances to test the controller's robustness.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Realistic Harbor Setup:</strong> Modeled a realistic harbor/marina setup, matching a specific real-world test site for correlation, enabling direct sim-to-real performance benchmarking using identical collision geometry.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Parameterized Testing:</strong> Capability to adjust parameters (time of day, fog, glare, water roughness) to stress-test the perception stack, automatically cycling through edge cases to reveal failure modes in low-visibility.
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
                 <!-- Autonomous Drone Project -->
                 <article class="project-card" data-category="robotics">
                     <div class="project-image">
@@ -196,7 +275,7 @@
                     </div>
                     <div class="project-content">
                         <h3 class="project-title">Real-Time Expression Detector</h3>
-                        <p class="project-description">Personalized facial expression recognition system using deep learning and computer vision.</p>
+                        <p class="project-description">Personalized facial expression recognition system using deep learning and computer vision using MediaPipe facemesh and PyTorch GRU classifier.</p>
                         <div class="project-tech">
                             <span class="tech-badge">PyTorch</span>
                             <span class="tech-badge">MediaPipe</span>

@@ -947,6 +947,20 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Open modal with project card content
     function openProjectModal(card) {
+        // CRITICAL: Suppress AOS animations IMMEDIATELY before any DOM/scroll changes
+        // This prevents background elements from animating when modal opens
+        document.body.classList.add('aos-suppress');
+        
+        // Disable AOS completely to prevent any scroll-based animations
+        if (window.AOS) {
+            try {
+                window.AOS.disable();
+            } catch (_) {}
+        }
+        
+        // Get scroll position BEFORE any changes that might trigger AOS
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        
         // Remove existing modal if any
         const existingModal = document.querySelector('.project-modal-overlay');
         if (existingModal) {
@@ -958,6 +972,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const modalContent = modalOverlay.querySelector('.project-modal-content');
         const closeBtn = modalOverlay.querySelector('.project-modal-close');
         
+        // Store scroll position for restoration (store as number, not string)
+        modalOverlay.dataset.scrollY = scrollY.toString();
+        
         // Clone the card content
         const cardClone = card.cloneNode(true);
         cardClone.style.width = '100%';
@@ -967,6 +984,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add cloned card to modal (close button is already in modalContent)
         modalContent.appendChild(cardClone);
         
+        // Apply fixed positioning to prevent scrolling (do this after suppression is active)
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+        document.body.style.left = '0';
+        document.documentElement.style.overflow = 'hidden';
+        
         // Trigger animation with a small delay to ensure DOM is ready
         setTimeout(() => {
             requestAnimationFrame(() => {
@@ -975,21 +1000,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 10);
         
         currentModal = modalOverlay;
-        
-        // Prevent body and html scroll when modal is open
-        // Get scroll position before any changes
-        const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-        
-        // Store scroll position for restoration (store as number, not string)
-        modalOverlay.dataset.scrollY = scrollY.toString();
-        
-        // Apply fixed positioning to prevent scrolling
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollY}px`;
-        document.body.style.width = '100%';
-        document.body.style.left = '0';
-        document.documentElement.style.overflow = 'hidden';
         
         // Close button handler
         closeBtn.addEventListener('click', closeProjectModal);
@@ -1071,10 +1081,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Restore original scroll behavior
                             html.style.scrollBehavior = originalScrollBehavior || '';
                             currentModal = null;
-                            // Remove AOS suppression shortly after close
+                            // Remove AOS suppression and re-enable after modal is fully closed
                             setTimeout(() => {
                                 document.body.classList.remove('aos-suppress');
-                            }, 150);
+                                if (window.AOS) {
+                                    try {
+                                        window.AOS.enable();
+                                    } catch (_) {}
+                                }
+                            }, 400);
                         });
                     });
                 } else {
@@ -1091,10 +1106,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (gridEl && typeof gridEl.blur === 'function') gridEl.blur();
                     } catch (_) {}
                     currentModal = null;
-                    // Ensure suppression is lifted even if overlay was already gone
+                    // Ensure suppression is lifted and AOS re-enabled even if overlay was already gone
                     setTimeout(() => {
                         document.body.classList.remove('aos-suppress');
-                    }, 150);
+                        if (window.AOS) {
+                            try {
+                                window.AOS.enable();
+                            } catch (_) {}
+                        }
+                    }, 400);
                 }
             }, 300); // Wait for fade-out animation (shorter than full animation)
         }
