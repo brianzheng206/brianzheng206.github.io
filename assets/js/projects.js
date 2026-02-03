@@ -949,14 +949,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function openProjectModal(card) {
         // CRITICAL: Suppress AOS animations IMMEDIATELY before any DOM/scroll changes
         // This prevents background elements from animating when modal opens
+        // Use CSS suppression instead of disabling AOS to allow filter buttons to still work
         document.body.classList.add('aos-suppress');
-        
-        // Disable AOS completely to prevent any scroll-based animations
-        if (window.AOS) {
-            try {
-                window.AOS.disable();
-            } catch (_) {}
-        }
         
         // Get scroll position BEFORE any changes that might trigger AOS
         const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
@@ -1081,14 +1075,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Restore original scroll behavior
                             html.style.scrollBehavior = originalScrollBehavior || '';
                             currentModal = null;
-                            // Remove AOS suppression and re-enable after modal is fully closed
+                            // Remove AOS suppression after modal is fully closed
                             setTimeout(() => {
                                 document.body.classList.remove('aos-suppress');
-                                if (window.AOS) {
-                                    try {
-                                        window.AOS.enable();
-                                    } catch (_) {}
-                                }
                             }, 400);
                         });
                     });
@@ -1106,14 +1095,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (gridEl && typeof gridEl.blur === 'function') gridEl.blur();
                     } catch (_) {}
                     currentModal = null;
-                    // Ensure suppression is lifted and AOS re-enabled even if overlay was already gone
+                    // Ensure suppression is lifted even if overlay was already gone
                     setTimeout(() => {
                         document.body.classList.remove('aos-suppress');
-                        if (window.AOS) {
-                            try {
-                                window.AOS.enable();
-                            } catch (_) {}
-                        }
                     }, 400);
                 }
             }, 300); // Wait for fade-out animation (shorter than full animation)

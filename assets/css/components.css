@@ -7,7 +7,8 @@
 }
 
 /* Suppress AOS transitions when modal is open or closing to avoid unintended replays */
-body.aos-suppress [data-aos] {
+/* Exclude filter buttons so they can always animate on initial load */
+body.aos-suppress [data-aos]:not(.filter-btn) {
     transition-duration: 0s !important;
     -webkit-transition-duration: 0s !important;
     animation-duration: 0s !important;
