@@ -397,6 +397,7 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
 /* Modal content styling */
 .project-modal-content .project-card {
     width: 100%;
+    min-width: 0; /* Allow flex child to shrink so text wraps inside */
     max-width: none;
     box-shadow: none;
     transform: none;
@@ -415,6 +416,7 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
 .project-modal-content .project-content {
     padding: var(--spacing-xl);
     width: 100%;
+    min-width: 0; /* Allow flex child to shrink so text wraps */
     box-sizing: border-box;
     overflow: visible;
     word-wrap: break-word;
@@ -426,6 +428,7 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
 .project-modal-content .project-description,
 .project-modal-content .project-narrative {
     width: 100%;
+    min-width: 0; /* Allow flex child to shrink so text wraps */
     word-wrap: break-word;
     overflow-wrap: break-word;
     box-sizing: border-box;
@@ -458,10 +461,20 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     margin-bottom: var(--spacing-md);
     padding-right: 0;
     max-width: 100%;
+    min-width: 0;
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
     color: var(--text-secondary) !important;
+    line-height: 1.6;
+    white-space: normal;
+}
+
+/* Modal: label and description on same line for readable narrative */
+.project-modal-content .narrative-item strong {
+    display: inline !important;
+    margin-bottom: 0;
+    margin-right: 0.25em;
 }
 
 .project-modal-content .project-card:hover {

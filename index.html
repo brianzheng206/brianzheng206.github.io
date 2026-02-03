@@ -224,6 +224,41 @@
                     </div>
                 </article>
 
+                <!-- Alpha-Zero Chess Engine Project -->
+                <article class="project-card" data-category="ai">
+                    <div class="project-image">
+                        <img src="assets/images/projects/chess-engine.png" alt="Alpha-Zero Chess Engine">
+                        <div class="project-overlay">
+                            <div class="project-links">
+                                <a href="https://github.com/brianzheng206/chess-engine" target="_blank" rel="noopener noreferrer" class="project-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                                <a href="https://youtu.be/7LRWiq-cUHQ" target="_blank" rel="noopener noreferrer" class="project-link" aria-label="Video"><i class="fas fa-external-link-alt"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Alpha-Zero Style Chess Engine</h3>
+                        <p class="project-description">End-to-end chess engine using PyTorch/CUDA with a dual-head ResNet for policy and value estimation, MCTS search, and RL self-play. ChessHacks 2025 Finalist.</p>
+                        <div class="project-tech">
+                            <span class="tech-badge">Python</span>
+                            <span class="tech-badge">PyTorch</span>
+                            <span class="tech-badge">ResNet</span>
+                            <span class="tech-badge">CUDA</span>
+                            <span class="tech-badge">MCTS</span>
+                        </div>
+                        <div class="project-narrative">
+                            <div class="narrative-item">
+                                <strong>Problem:</strong> Build a strong chess engine that learns from self-play and neural network–guided search, mapping board state to move policy and position value.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Approach:</strong> Designed a dual-head <strong>ResNet</strong> mapping 18-plane board representations to 4,672 policy logits and value estimates. Integrated <strong>MCTS/PUCT</strong> search guided by network priors and values; used transposition tables, <strong>FP16</strong> LRU caching, and batched leaf evaluations to achieve 3–5× throughput and &lt;200 ms typical move latency.
+                            </div>
+                            <div class="narrative-item">
+                                <strong>Result:</strong> <strong>ChessHacks 2025 Finalist.</strong> Improved model accuracy via RL self-play and <strong>DAgger</strong> distillation with Stockfish; implemented a rolling replay buffer to mitigate distribution shift, optimizing with KL-Divergence and MSE losses.
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
                 <!-- Autonomous Drone Project -->
                 <article class="project-card" data-category="robotics">
                     <div class="project-image">
