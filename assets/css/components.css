@@ -156,8 +156,9 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     will-change: scroll-position;
     /* Prevent scrollbar popping when height changes - removed scrollbar-gutter to avoid duplicate appearance */
-    /* Prevent height changes during filtering; match card height */
-    min-height: 500px;
+    /* Fixed height so cards don't change size when switching filters; tall enough for full description */
+    height: 680px;
+    min-height: 680px;
     align-items: stretch;
     /* Isolate layout/paint for smoother filter animations (avoid size to prevent clipping) */
     /* Removed 'contain' to allow scrollbar interaction */
@@ -208,15 +209,17 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     /* Removed scrollbar-gutter to avoid duplicate scrollbar appearance */
     contain: layout paint size;
     isolation: isolate;
-    /* Prevent height changes during filtering */
-    min-height: 520px;
+    /* Fixed height so cards don't change size when switching filters; tall enough for full description */
+    height: 680px;
+    min-height: 680px;
     align-items: stretch;
     /* Ensure no duplicate scrollbar - this class is used as an ID selector */
     overflow: visible;
 }
 
 /* Cards become fixed-width items in the horizontal strip */
-.project-card {
+.projects-carousel .project-card,
+.projects-grid .project-card {
     background-color: var(--bg-card);
     border-radius: 12px;
     overflow: hidden;
@@ -235,7 +238,30 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     backface-visibility: hidden;
     will-change: transform, opacity;
     contain: layout paint;
-    /* Auto height to fit content */
+    /* Fixed height so cards stay same size when switching filters */
+    height: 100%;
+    min-height: 0;
+}
+
+/* Fallback for project-card outside carousel/grid (e.g. modal reuses .project-card) */
+.project-card {
+    background-color: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    border: 1px solid var(--border-color);
+    flex: 0 0 380px;
+    width: 380px;
+    max-width: calc(100vw - 2rem);
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    position: relative;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+    contain: layout paint;
     min-height: 500px;
     height: auto;
 }
@@ -785,6 +811,13 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     min-height: 0; /* Allow flexbox to shrink */
 }
 
+/* In carousel/grid, content area grows to show full description */
+.projects-carousel .project-content,
+.projects-grid .project-content {
+    min-height: 0;
+    overflow: visible;
+}
+
 .project-title {
     font-size: var(--font-size-2xl);
     margin-bottom: var(--spacing-md);
@@ -796,10 +829,11 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
     line-height: 1.5;
 }
 
-/* Show full description in carousel cards */
+/* Show full description in carousel cards - no clipping */
 .projects-carousel .project-description,
 .projects-grid .project-description {
     flex: 1;
+    min-height: 0;
     overflow: visible;
     display: block;
 }
@@ -1968,15 +2002,18 @@ body.aos-buttons-gated #projects .filter-btn[data-aos] {
         padding: 0;
         width: 100%;
         display: flex;
-        min-height: auto; /* Reset min-height for mobile */
+        height: auto;
+        min-height: auto; /* Reset fixed height for mobile vertical stack */
     }
     
+    .projects-carousel .project-card,
+    .projects-grid .project-card,
     .project-card {
         width: 100% !important;
         max-width: 100% !important;
         min-width: 0;
         flex: 0 0 auto;
-        height: auto; /* Reset height for mobile */
+        height: auto; /* Reset height for mobile vertical stack */
     }
     
     .project-image {
